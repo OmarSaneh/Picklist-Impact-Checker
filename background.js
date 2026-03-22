@@ -22,6 +22,23 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 
+  if (msg.type === 'SOAP_METADATA') {
+    (async () => {
+      try {
+        const res = await fetch(`${msg.instanceUrl}/services/Soap/m/59.0`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/xml; charset=UTF-8', 'SOAPAction': '""' },
+          body: msg.body,
+        });
+        const xml = await res.text();
+        sendResponse({ xml });
+      } catch (err) {
+        sendResponse({ error: err.message });
+      }
+    })();
+    return true;
+  }
+
   if (msg.type !== 'GET_SESSION') return false;
 
   (async () => {

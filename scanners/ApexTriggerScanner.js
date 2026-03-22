@@ -4,7 +4,6 @@ import { MetadataScanner } from './MetadataScanner.js';
 
 export class ApexTriggerScanner extends MetadataScanner {
   get label() { return 'Apex Triggers'; }
-  get progressPct() { return 78; }
 
   async scan(_objName, value) {
     let records;

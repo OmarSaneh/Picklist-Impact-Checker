@@ -39,3 +39,15 @@ export async function toolingQueryAll(soql) {
   while (url) { const d = await sfFetch(url); all.push(...(d.records || [])); url = d.nextRecordsUrl || null; }
   return all;
 }
+
+export async function restQuery(soql) {
+  const data = await sfFetch(`/services/data/v59.0/query?q=${encodeURIComponent(soql)}`);
+  return data.records || [];
+}
+
+export async function restQueryAll(soql) {
+  let url = `/services/data/v59.0/query?q=${encodeURIComponent(soql)}`;
+  const all = [];
+  while (url) { const d = await sfFetch(url); all.push(...(d.records || [])); url = d.nextRecordsUrl || null; }
+  return all;
+}

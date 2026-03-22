@@ -4,7 +4,6 @@ import { MetadataScanner } from './MetadataScanner.js';
 
 export class ValidationRuleScanner extends MetadataScanner {
   get label() { return 'Validation Rules'; }
-  get progressPct() { return 5; }
 
   async scan(objName, value) {
     const list = await toolingQuery(

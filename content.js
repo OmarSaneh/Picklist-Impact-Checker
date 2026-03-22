@@ -7,12 +7,19 @@
 
 import { getSession, setSession, sfFetch } from './api.js';
 import { escapeHtml, buildSetupUrl } from './utils.js';
-import { ValidationRuleScanner } from './scanners/ValidationRuleScanner.js';
-import { FormulaFieldScanner }   from './scanners/FormulaFieldScanner.js';
-import { FlowScanner }           from './scanners/FlowScanner.js';
-import { ApexClassScanner }      from './scanners/ApexClassScanner.js';
-import { ApexTriggerScanner }    from './scanners/ApexTriggerScanner.js';
-import { WorkflowRuleScanner }   from './scanners/WorkflowRuleScanner.js';
+import { ValidationRuleScanner }  from './scanners/ValidationRuleScanner.js';
+import { FormulaFieldScanner }    from './scanners/FormulaFieldScanner.js';
+import { FlowScanner }            from './scanners/FlowScanner.js';
+import { ApexClassScanner }       from './scanners/ApexClassScanner.js';
+import { ApexTriggerScanner }     from './scanners/ApexTriggerScanner.js';
+import { WorkflowRuleScanner }    from './scanners/WorkflowRuleScanner.js';
+import { AuraComponentScanner }   from './scanners/AuraComponentScanner.js';
+import { VisualforceScanner }     from './scanners/VisualforceScanner.js';
+import { ApprovalProcessScanner } from './scanners/ApprovalProcessScanner.js';
+import { ListViewScanner }        from './scanners/ListViewScanner.js';
+import { EmailTemplateScanner }   from './scanners/EmailTemplateScanner.js';
+import { PathAssistantScanner }   from './scanners/PathAssistantScanner.js';
+import { ReportScanner }          from './scanners/ReportScanner.js';
 
 const _isInFrame     = window !== window.top;
 const _isSetupDomain = location.hostname.endsWith('salesforce-setup.com');
@@ -24,6 +31,13 @@ const SCANNERS = [
   new ApexClassScanner(),
   new ApexTriggerScanner(),
   new WorkflowRuleScanner(),
+  new AuraComponentScanner(),
+  new VisualforceScanner(),
+  new ApprovalProcessScanner(),
+  new ListViewScanner(),
+  new EmailTemplateScanner(),
+  new PathAssistantScanner(),
+  new ReportScanner(),
 ];
 
 // ── URL parsing (main frame only) ──────────────────────────────────────────
@@ -141,13 +155,20 @@ async function runScanForValue(objName, value) {
   showPanel(`Scanning "${value}" on ${objName}`);
   setProgress(0, 'Starting scan…');
 
-  const allResults = Object.fromEntries(SCANNERS.map(s => [s.label, []]));
-
-  for (const scanner of SCANNERS) {
-    setProgress(scanner.progressPct, scanner.progressLabel);
-    try { allResults[scanner.label] = await scanner.scan(objName, value); }
-    catch (err) { allResults[scanner.label] = [{ id: '', name: `⚠ Error: ${err.message}`, snippets: [], linkType: null }]; }
-  }
+  let completed = 0;
+  const entries = await Promise.all(
+    SCANNERS.map(async scanner => {
+      try {
+        const result = await scanner.scan(objName, value);
+        setProgress(Math.round((++completed / SCANNERS.length) * 95), `Scanned ${scanner.label}…`);
+        return [scanner.label, result];
+      } catch (err) {
+        setProgress(Math.round((++completed / SCANNERS.length) * 95), `Error in ${scanner.label}`);
+        return [scanner.label, [{ id: '', name: `⚠ Error: ${err.message}`, snippets: [], linkType: null }]];
+      }
+    })
+  );
+  const allResults = Object.fromEntries(entries);
 
   setProgress(100, 'Scan complete.');
   await new Promise(r => setTimeout(r, 400));
@@ -222,12 +243,9 @@ async function injectIntoClassicTable(ctx) {
     const headerCells = Array.from(headerRow.querySelectorAll('th, td'));
     const headers = headerCells.map(c => c.textContent.trim().toLowerCase().replace(/\s+/g, ' '));
 
-    console.log('[PIC iframe] table headers:', headers);
-
     // Only target the picklist values table — must have both "values" and "api name" columns
     const valuesIdx  = headers.findIndex(h => /^values?$/.test(h));
     const apiNameIdx = headers.findIndex(h => /api[\s\-]?name/.test(h));
-    console.log('[PIC iframe] valuesIdx:', valuesIdx, 'apiNameIdx:', apiNameIdx);
     if (valuesIdx === -1 || apiNameIdx === -1) continue;
 
     // Add "Impact" header column if missing
@@ -246,17 +264,12 @@ async function injectIntoClassicTable(ctx) {
       return true;
     });
 
-    let dbg = 0;
     for (const row of dataRows) {
-      if (row.querySelector('.pic-scan-btn')) { if (dbg++ < 2) console.log('[PIC row] skip: already has btn'); continue; }
+      if (row.querySelector('.pic-scan-btn')) continue;
       const cells = Array.from(row.querySelectorAll('th, td'));
-      if (cells.length <= apiNameIdx) {
-        if (dbg++ < 5) console.log('[PIC row] skip: cells.length=', cells.length, '≤ apiNameIdx=', apiNameIdx, '| texts:', cells.map(c => c.textContent.trim().slice(0, 20)));
-        continue;
-      }
+      if (cells.length <= apiNameIdx) continue;
       const apiValue = cells[apiNameIdx].textContent.trim();
-      if (!apiValue) { if (dbg++ < 2) console.log('[PIC row] skip: empty apiValue at idx', apiNameIdx); continue; }
-      if (dbg++ < 5) console.log('[PIC row] inject for:', apiValue, '(cells:', cells.length, ')');
+      if (!apiValue) continue;
 
       const td = document.createElement('td');
       const a = document.createElement('a');
@@ -268,7 +281,6 @@ async function injectIntoClassicTable(ctx) {
       row.appendChild(td);
       totalInjected++;
     }
-    console.log('[PIC] totalInjected:', totalInjected, '| dataRows:', dataRows.length, '| apiNameIdx:', apiNameIdx);
   }
 
   if (totalInjected > 0) {
@@ -281,8 +293,6 @@ async function injectIntoClassicTable(ctx) {
 // ── Main frame init ────────────────────────────────────────────────────────
 
 function initSetupFrame() {
-  console.log('[PIC] initSetupFrame');
-
   // Build context message with session baked in so the iframe doesn't need
   // to derive instanceUrl from its own (VF) hostname.
   async function buildCtxMsg() {
@@ -296,15 +306,6 @@ function initSetupFrame() {
     } catch { /* send without session — iframe will fall back to getSession() */ }
     return msg;
   }
-
-  // Log debug reports forwarded from iframes
-  window.addEventListener('message', (e) => {
-    if (e.data?.type !== 'PIC_DEBUG') return;
-    const d = e.data;
-    console.log(`[PIC iframe@${d.hostname}] url: ${d.url}`);
-    console.log(`[PIC iframe@${d.hostname}] tables: ${d.tableCount} | injected: ${d.injected}`);
-    if (d.tableDebug?.length) console.log(`[PIC iframe@${d.hostname}] table headers:`, d.tableDebug);
-  });
 
   // When a child frame announces PIC_READY, send it the current context + session
   window.addEventListener('message', async (e) => {
@@ -346,25 +347,13 @@ function initSetupFrame() {
   setTimeout(broadcastContext, 2000);
   setTimeout(broadcastContext, 4000);
 
-  // After 3 s, dump all frame URLs via background so we can find the picklist iframe's domain
-  setTimeout(async () => {
-    try {
-      const { frames } = await chrome.runtime.sendMessage({ type: 'GET_FRAMES' });
-      console.log('[PIC] frames in tab:', frames.map(f => `[${f.frameId}→${f.parentFrameId}] ${f.url}`));
-    } catch (e) {
-      console.log('[PIC] GET_FRAMES error:', e.message);
-    }
-  }, 3000);
 }
 
 // ── Iframe init ────────────────────────────────────────────────────────────
 
 function initClassicFrame() {
-  console.log('[PIC] initClassicFrame — url:', location.href);
-
   window.addEventListener('message', async (e) => {
     if (e.data?.type !== 'PIC_CONTEXT') return;
-    console.log('[PIC iframe] received PIC_CONTEXT on', location.hostname, ':', e.data);
     await injectIntoClassicTable(e.data);
   });
 
@@ -379,8 +368,6 @@ function initClassicFrame() {
 }
 
 // ── Entrypoint ─────────────────────────────────────────────────────────────
-
-console.log('[PIC] content.js loaded — inFrame:', _isInFrame, '| setupDomain:', _isSetupDomain, '| url:', location.href);
 
 if (_isSetupDomain && !_isInFrame) {
   initSetupFrame();

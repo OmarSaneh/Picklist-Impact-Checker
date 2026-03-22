@@ -4,7 +4,6 @@ import { MetadataScanner } from './MetadataScanner.js';
 
 export class ApexClassScanner extends MetadataScanner {
   get label() { return 'Apex Classes'; }
-  get progressPct() { return 58; }
 
   async scan(_objName, value) {
     let records;

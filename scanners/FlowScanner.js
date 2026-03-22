@@ -5,7 +5,6 @@ const NODE_TYPES = ['decisions','assignments','recordLookups','recordCreates','r
 
 export class FlowScanner extends MetadataScanner {
   get label() { return 'Flows'; }
-  get progressPct() { return 38; }
 
   #extractSnippets(meta, jq) {
     const hits = [];
