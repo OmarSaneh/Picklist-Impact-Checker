@@ -1,0 +1,17 @@
+{
+  "name": "picklist-impact-checker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "api.js",
+  "scripts": {
+    "build": "esbuild content.js --bundle --outfile=content.bundle.js --platform=browser",
+    "watch": "esbuild content.js --bundle --outfile=content.bundle.js --platform=browser --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "esbuild": "^0.27.4"
+  }
+}
