@@ -31,7 +31,7 @@ export function buildSetupUrl(type, id, objName) {
     case 'WorkflowRule':   return `${setupBase}/lightning/setup/WorkflowRules/home`;
     case 'AuraComponent':  return `${setupBase}/lightning/setup/AuraDefinitionBundles/home`;
     case 'VisualforcePage': return `${setupBase}/lightning/setup/ApexPages/home`;
-    case 'ApprovalProcess': return `${setupBase}/lightning/setup/ApprovalProcesses/home`;
+    case 'ApprovalProcess': return id ? `${setupBase}/lightning/setup/ApprovalProcesses/page?address=%2F${id}` : `${setupBase}/lightning/setup/ApprovalProcesses/home`;
     case 'ListView':       return `/lightning/o/${objName}/list?filterName=${id}`;
     case 'EmailTemplate':  return `${setupBase}/lightning/setup/CommunicationTemplatesEmail/home`;
     case 'PathAssistant':  return `${setupBase}/lightning/setup/PathAssistant/home`;

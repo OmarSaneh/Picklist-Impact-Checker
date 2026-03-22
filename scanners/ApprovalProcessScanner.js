@@ -1,4 +1,4 @@
-import { getSession } from '../api.js';
+import { getSession, restQuery } from '../api.js';
 import { MetadataScanner } from './MetadataScanner.js';
 
 export class ApprovalProcessScanner extends MetadataScanner {
@@ -24,20 +24,12 @@ export class ApprovalProcessScanner extends MetadataScanner {
     let instanceUrl, sid;
     try { ({ instanceUrl, sid } = await getSession()); } catch (err) { return [{ id: '', name: `⚠ Session error: ${err.message}`, snippets: [], linkType: 'ApprovalProcess' }]; }
 
-    // List all ApprovalProcess metadata names
-    let listXml;
-    try {
-      listXml = await this.#soap(instanceUrl, sid, `
-        <met:listMetadata>
-          <met:queries><met:type>ApprovalProcess</met:type></met:queries>
-          <met:asOfVersion>59.0</met:asOfVersion>
-        </met:listMetadata>`);
-    } catch (err) { return [{ id: '', name: `⚠ listMetadata error: ${err.message}`, snippets: [], linkType: 'ApprovalProcess' }]; }
-
-    const allFullNames = [...listXml.matchAll(/<fullName>([^<]+)<\/fullName>/g)].map(m => m[1]);
-    // Only read approval processes for this object (fullName = "ObjectName.ProcessName")
-    const fullNames = allFullNames.filter(n => n.toLowerCase().startsWith(`${objName.toLowerCase()}.`));
-    if (fullNames.length === 0) return [];
+    // Only read active approval processes for this object — avoids reading 40+ inactive old versions
+    let processDefs;
+    try { processDefs = await restQuery(`SELECT Id, DeveloperName FROM ProcessDefinition WHERE TableEnumOrId = '${objName}' AND State = 'Active'`); } catch { processDefs = []; }
+    if (processDefs.length === 0) return [];
+    const fullNames = processDefs.map(p => `${objName}.${p.DeveloperName}`);
+    const idByFullName = Object.fromEntries(processDefs.map(p => [`${objName}.${p.DeveloperName}`, p.Id]));
 
     const xmlValue = value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const results = [];
@@ -54,9 +46,9 @@ export class ApprovalProcessScanner extends MetadataScanner {
         for (const [, recordXml] of readXml.matchAll(/<records[^>]*>([\s\S]*?)<\/records>/g)) {
           if (!recordXml.includes(`<value>${xmlValue}</value>`)) continue;
           const displayName = fullName.includes('.') ? fullName.split('.').slice(1).join('.') : fullName;
-          results.push({ id: '', name: displayName, snippets: [], linkType: 'ApprovalProcess' });
+          results.push({ id: idByFullName[fullName] || '', name: displayName, snippets: [], linkType: 'ApprovalProcess' });
         }
-      } catch { /* skip individual */ }
+      } catch { /* skip — can't read this process */ }
     }
     return results;
   }
