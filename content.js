@@ -5,7 +5,7 @@
    2. Child iframe on salesforce.com       → table row injection + panel
    ───────────────────────────────────────────────────────────────────────── */
 
-import { getSession, setSession, sfFetch } from './api.js';
+import { getSession, setSession, sfFetch, getOrgName } from './api.js';
 import { escapeHtml, buildSetupUrl } from './utils.js';
 import { ValidationRuleScanner }  from './scanners/ValidationRuleScanner.js';
 import { FormulaFieldScanner }    from './scanners/FormulaFieldScanner.js';
@@ -75,6 +75,7 @@ function ensurePanel() {
     <div id="pic-panel-header">
       <div>
         <div id="pic-panel-title">Picklist Impact Checker</div>
+        <div id="pic-panel-org"></div>
         <div id="pic-panel-subtitle"></div>
       </div>
       <button id="pic-panel-close" title="Close">✕</button>
@@ -97,6 +98,12 @@ function ensurePanel() {
 }
 
 function closePanel() { if (_panel) _panel.classList.remove('pic-open'); }
+
+function setOrgName(name) {
+  if (!_panel) return;
+  const el = _panel.querySelector('#pic-panel-org');
+  if (el && name) el.textContent = name;
+}
 
 function showPanel(subtitle) {
   const panel = ensurePanel();
@@ -154,6 +161,7 @@ function renderResults(allResults, objName, value) {
 async function runScanForValue(objName, value) {
   showPanel(`Scanning "${value}" on ${objName}`);
   setProgress(0, 'Starting scan…');
+  getOrgName().then(name => { if (name) setOrgName(name); }).catch(() => {});
 
   let completed = 0;
   const entries = await Promise.all(
@@ -200,6 +208,7 @@ async function injectValuePicker(ctx) {
   const body = picker.querySelector('#pic-picker-body');
   try {
     await getSession();
+    getOrgName().then(name => { if (name) setOrgName(name); }).catch(() => {});
     const result = await fetchPicklistValues(ctx.objName, ctx.fieldName);
     if (!result) { body.innerHTML = '<div class="pic-picker-msg">Field not found or not a picklist.</div>'; return; }
     picker.querySelector('#pic-picker-field').textContent = `${ctx.objName} · ${result.fieldLabel}`;

@@ -3,7 +3,7 @@
   "name": "Picklist Impact Checker",
   "version": "1.0.0",
   "description": "Scan Salesforce metadata for hardcoded picklist values that would break when renamed.",
-  "permissions": ["cookies", "webNavigation", "tabs"],
+  "permissions": ["cookies", "tabs"],
   "host_permissions": [
     "https://*.salesforce.com/*",
     "https://*.force.com/*",

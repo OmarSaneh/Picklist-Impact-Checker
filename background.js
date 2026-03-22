@@ -7,21 +7,6 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  // List all frames in the current tab — lets us discover the picklist iframe's real URL
-  if (msg.type === 'GET_FRAMES') {
-    // Wrap in a Promise so the service worker stays alive until we respond
-    chrome.webNavigation.getAllFrames({ tabId: sender.tab.id })
-      .then(frames => sendResponse({
-        frames: (frames || []).map(f => ({
-          url: f.url,
-          frameId: f.frameId,
-          parentFrameId: f.parentFrameId,
-        })),
-      }))
-      .catch(err => sendResponse({ frames: [], error: err.message }));
-    return true;
-  }
-
   if (msg.type === 'SOAP_METADATA') {
     (async () => {
       try {
@@ -53,16 +38,20 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       let cookie = await chrome.cookies.get({ url: instanceUrl, name: 'sid' });
 
       if (!cookie) {
-        // Fallback: search all SF cookies and pick the best match.
+        // Fallback: search all SF cookies and match against the known org domain.
+        // Never blindly pick sfCookies[0] — wrong-org auth silently corrupts all results.
         const allCookies = await chrome.cookies.getAll({ name: 'sid' });
         const sfCookies = allCookies.filter(c => {
           const d = c.domain.replace(/^\./, '');
           return d.endsWith('salesforce.com') || d.endsWith('force.com');
         });
-        const exact = sfCookies.find(c =>
-          apiHostname.includes(c.domain.replace(/^\./, ''))
-        );
-        cookie = exact || sfCookies[0] || null;
+        // Derive the requesting tab's hostname as a secondary signal.
+        let tabHostname = '';
+        try { tabHostname = sender.tab?.url ? new URL(sender.tab.url).hostname : ''; } catch { }
+        cookie = sfCookies.find(c => {
+          const d = c.domain.replace(/^\./, '');
+          return apiHostname.includes(d) || (tabHostname && tabHostname.includes(d));
+        }) || null;
       }
 
       if (!cookie) {
