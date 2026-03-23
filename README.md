@@ -6,11 +6,11 @@ A Salesforce Chrome extension that scans your org's metadata for hardcoded pickl
 
 ## What it does
 
-When you're on a picklist field in Salesforce Setup (Object Manager → Fields & Relationships), the extension injects a **Scan** button next to each value. Click it and a side panel shows every place that value is hardcoded across 17 metadata types.
+When you're on a picklist field in Salesforce Setup (Object Manager → Fields & Relationships), the extension injects a **Scan** button next to each value. Click it and a side panel shows every place that value is hardcoded across 22 metadata types.
 
 ---
 
-## Scanners (17 total)
+## Scanners (22 total)
 
 | # | Metadata Type | Scope | Notes |
 |---|---|---|---|
@@ -25,12 +25,17 @@ When you're on a picklist field in Salesforce Setup (Object Manager → Fields &
 | 9 | **Approval Processes** | All objects | Checks entry criteria and step conditions via SOAP Metadata API |
 | 10 | **List Views** | All objects | Checks SOQL filter query for the value |
 | 11 | **Email Templates** | Org-wide | Checks HTML and plain-text body |
-| 12 | **Path Assistants** | All objects | Checks step `fieldValue` entries |
+| 12 | **Path Assistants** ⏳ | All objects | Checks step `fieldValue` entries — pending validation |
 | 13 | **Reports** | Org-wide | Checks report filter values (supports multi-value filters) |
 | 14 | **Record Types** | All objects | Checks which picklist values are enabled per record type |
 | 15 | **Support Processes** | Case only | Checks which Status values are active in each support process |
 | 16 | **Escalation Rules** | Case only | Checks rule entry criteria for the value |
 | 17 | **Entitlement Processes** | Case & WorkOrder | Checks milestone criteria conditions |
+| 18 | **LWC** | Org-wide | Full-text search of component JS files |
+| 19 | **Assignment Rules** ⏳ | Case & Lead | Checks rule criteria values — pending validation |
+| 20 | **Sharing Rules** ⏳ | All objects | Checks criteria-based sharing rule conditions — pending validation |
+| 21 | **Quick Actions** ⏳ | All objects | Checks predefined field values on object-scoped actions — pending validation |
+| 22 | **Sales & Lead Processes** ⏳ | Opportunity & Lead | Checks which Stage/Status values are active in each process — pending validation |
 
 ---
 
