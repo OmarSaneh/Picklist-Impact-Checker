@@ -40,6 +40,7 @@ export function buildSetupUrl(type, id, objName) {
     case 'SupportProcess':      return `${setupBase}/lightning/setup/SupportProcesses/home`;
     case 'EscalationRule':      return `${setupBase}/lightning/setup/CaseEscalationRules/home`;
     case 'EntitlementProcess':  return `${setupBase}/lightning/setup/EntitlementProcesses/home`;
+    case 'LWC':                 return `${setupBase}/lightning/setup/LightningComponentBundles/home`;
     default:                    return setupBase;
   }
 }

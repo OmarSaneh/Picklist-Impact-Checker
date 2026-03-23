@@ -24,6 +24,7 @@ import { RecordTypeScanner }      from './scanners/RecordTypeScanner.js';
 import { SupportProcessScanner }  from './scanners/SupportProcessScanner.js';
 import { EscalationRuleScanner }  from './scanners/EscalationRuleScanner.js';
 import { EntitlementProcessScanner } from './scanners/EntitlementProcessScanner.js';
+import { LwcScanner }                from './scanners/LwcScanner.js';
 
 const _isInFrame     = window !== window.top;
 const _isSetupDomain = location.hostname.endsWith('salesforce-setup.com');
@@ -46,6 +47,7 @@ const SCANNERS = [
   new SupportProcessScanner(),
   new EscalationRuleScanner(),
   new EntitlementProcessScanner(),
+  new LwcScanner(),
 ];
 
 // ── URL parsing (main frame only) ──────────────────────────────────────────
