@@ -5,19 +5,21 @@ export class PathAssistantScanner extends MetadataScanner {
   get label() { return 'Path Assistants'; }
 
   async scan(_objName, value) {
-    let list;
+    let paths;
     try {
-      list = await toolingQuery(`SELECT Id, MasterLabel FROM PathAssistant`);
+      paths = await toolingQuery(`SELECT Id, MasterLabel FROM PathAssistant`);
     } catch { return []; }
-    if (!list.length) return [];
+    if (!paths.length) return [];
 
     const results = [];
-    for (const pa of list) {
+    for (const pa of paths) {
       try {
-        const steps = await toolingQuery(
-          `SELECT FieldValue FROM PathAssistantStepItem WHERE PathAssistantId = '${pa.Id}'`
+        // ItemId is polymorphic: 0EH = PicklistEntry, 1CF = PathAssistantStepInfo
+        // Item.Value traverses the PicklistEntry relationship to get the picklist value
+        const items = await toolingQuery(
+          `SELECT ItemId, Item.Value FROM PathAssistantStepItem WHERE PathAssistantId = '${pa.Id}'`
         );
-        if (steps.some(s => s.FieldValue === value)) {
+        if (items.some(i => i.Item?.Value === value)) {
           results.push({ id: '', name: pa.MasterLabel, snippets: [], linkType: 'plain' });
         }
       } catch { /* skip */ }
