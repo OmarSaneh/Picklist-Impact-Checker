@@ -1,6 +1,6 @@
 # Picklist Impact Checker
 
-A Salesforce Chrome extension that scans your org's metadata for hardcoded picklist values — so you know exactly what breaks before you rename or deactivate one.
+A Salesforce Chrome extension that scans your org's metadata for hardcoded picklist values helping you to know exactly what could break before you rename or deactivate one.
 
 ---
 
