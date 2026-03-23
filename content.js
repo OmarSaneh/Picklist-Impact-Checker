@@ -156,8 +156,10 @@ function renderResults(allResults, objName, value) {
     header.addEventListener('click', () => { body.style.display = body.style.display === 'none' ? '' : 'none'; });
     for (const item of items) {
       const div = document.createElement('div'); div.className = 'pic-result-item';
-      const url = item.linkType ? buildSetupUrl(item.linkType, item.id, objName) : null;
-      const nameHtml = url ? `<a href="${escapeHtml(url)}" target="_blank">${escapeHtml(item.name)}</a>` : `<span class="pic-result-error">${escapeHtml(item.name)}</span>`;
+      const url = (item.linkType && item.linkType !== 'plain') ? buildSetupUrl(item.linkType, item.id, objName) : null;
+      const nameHtml = url ? `<a href="${escapeHtml(url)}" target="_blank">${escapeHtml(item.name)}</a>`
+        : item.linkType === null ? `<span class="pic-result-error">${escapeHtml(item.name)}</span>`
+        : `<span>${escapeHtml(item.name)}</span>`;
       let html = `<div class="pic-result-item-name">${nameHtml}</div>`;
       for (const snippet of item.snippets) html += `<div class="pic-result-snippet">${escapeHtml(snippet)}</div>`;
       div.innerHTML = html; body.appendChild(div);

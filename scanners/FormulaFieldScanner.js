@@ -18,7 +18,7 @@ export class FormulaFieldScanner extends MetadataScanner {
       const formula = field.calculatedFormula;
       if (!formula.includes(qDouble) && !formula.includes(qSingle)) continue;
       const q = formula.includes(qDouble) ? qDouble : qSingle;
-      results.push({ id: '', name: field.name, snippets: getMatchingSnippets(formula, q), linkType: 'FormulaField' });
+      results.push({ id: '', name: `${objName} · ${field.name}`, snippets: getMatchingSnippets(formula, q), linkType: 'plain' });
     }
     return results;
   }
