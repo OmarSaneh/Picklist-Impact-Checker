@@ -15,7 +15,7 @@ export class FormulaFieldScanner extends MetadataScanner {
     try { list = await toolingQuery(`SELECT Id, DeveloperName FROM CustomField WHERE EntityDefinitionId = '${entityId}'`); } catch { return []; }
 
     const results = [];
-    const q = "'" + value + "'";
+    const q = '"' + value + '"';
     for (const field of list) {
       try {
         const detail = await toolingQuery(`SELECT Id, DeveloperName, Metadata FROM CustomField WHERE Id = '${field.Id}'`);

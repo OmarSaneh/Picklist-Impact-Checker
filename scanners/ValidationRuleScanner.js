@@ -10,7 +10,7 @@ export class ValidationRuleScanner extends MetadataScanner {
       `SELECT Id, ValidationName FROM ValidationRule WHERE EntityDefinition.QualifiedApiName = '${objName}'`
     );
     const results = [];
-    const q = "'" + value + "'";
+    const q = '"' + value + '"';
     for (const vr of list) {
       try {
         const detail = await toolingQuery(`SELECT Id, ValidationName, Metadata FROM ValidationRule WHERE Id = '${vr.Id}'`);
