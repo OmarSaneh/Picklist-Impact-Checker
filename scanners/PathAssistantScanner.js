@@ -46,7 +46,7 @@ export class PathAssistantScanner extends MetadataScanner {
             <met:type>PathAssistant</met:type>
             <met:fullNames>${fullName}</met:fullNames>
           </met:readMetadata>`);
-        if (readXml.includes(`<fieldValue>${xmlValue}</fieldValue>`)) {
+        if (readXml.includes(`<picklistValueName>${xmlValue}</picklistValueName>`)) {
           results.push({ id: '', name: pa.MasterLabel, snippets: [], linkType: 'plain' });
         }
       } catch { /* skip */ }
