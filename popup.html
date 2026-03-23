@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Picklist Impact Checker</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header id="header">
+    <div id="header-left">
+      <span class="header-icon">⚡</span>
+      <span class="header-title">Picklist Impact Checker</span>
+    </div>
+    <div id="connection-badge" class="badge badge-checking">Checking…</div>
+  </header>
+
+  <!-- ── Org info bar ── -->
+  <div id="org-bar" class="hidden">
+    <span id="org-hostname"></span>
+  </div>
+
+  <!-- ── Not on Salesforce state ── -->
+  <div id="not-sf-state" class="hidden">
+    <div class="state-icon">🔒</div>
+    <div class="state-title">Not connected to Salesforce</div>
+    <div class="state-desc">
+      Navigate to a Salesforce org tab and reopen this extension.
+    </div>
+  </div>
+
+  <!-- ── Session error state ── -->
+  <div id="session-error-state" class="hidden">
+    <div class="state-icon">⚠️</div>
+    <div class="state-title">Session Error</div>
+    <div id="session-error-msg" class="state-desc"></div>
+    <button id="retry-btn" class="btn btn-secondary mt-8">Retry</button>
+  </div>
+
+  <!-- ── Picker form ── -->
+  <form id="picker-form" class="hidden" autocomplete="off">
+
+    <!-- Step 1: Object -->
+    <div class="form-group" id="step-object">
+      <label for="object-select">Salesforce Object</label>
+      <select id="object-select" disabled>
+        <option value="">Loading objects…</option>
+      </select>
+    </div>
+
+    <!-- Step 2: Field -->
+    <div class="form-group hidden" id="step-field">
+      <label for="field-select">Picklist Field</label>
+      <select id="field-select" disabled>
+        <option value="">Select a field…</option>
+      </select>
+    </div>
+
+    <!-- Step 3: Value -->
+    <div class="form-group hidden" id="step-value">
+      <label>Picklist Value to Check</label>
+      <div id="value-list"></div>
+    </div>
+
+  </form>
+
+  <!-- ── Progress ── -->
+  <div id="progress-section" class="hidden">
+    <div id="progress-label">Initializing scan…</div>
+    <div class="progress-track">
+      <div id="progress-bar" class="progress-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- ── Results ── -->
+  <div id="results-section" class="hidden">
+
+    <div id="results-header">
+      <div id="results-summary"></div>
+      <button id="new-scan-btn" class="btn btn-secondary btn-sm">New Scan</button>
+    </div>
+
+    <!-- Flow limit notice -->
+    <div id="flow-limit-notice" class="notice hidden">
+      ℹ Flow scan capped at 50 active flows (Salesforce API limitation).
+    </div>
+
+    <!-- Empty state -->
+    <div id="empty-state" class="hidden">
+      <div class="empty-icon">✓</div>
+      <div class="empty-title">No hardcoded references found</div>
+      <div class="empty-desc">Safe to rename this picklist value.</div>
+    </div>
+
+    <!-- Result groups -->
+    <div id="results-list"></div>
+
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
