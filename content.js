@@ -20,6 +20,10 @@ import { ListViewScanner }        from './scanners/ListViewScanner.js';
 import { EmailTemplateScanner }   from './scanners/EmailTemplateScanner.js';
 import { PathAssistantScanner }   from './scanners/PathAssistantScanner.js';
 import { ReportScanner }          from './scanners/ReportScanner.js';
+import { RecordTypeScanner }      from './scanners/RecordTypeScanner.js';
+import { SupportProcessScanner }  from './scanners/SupportProcessScanner.js';
+import { EscalationRuleScanner }  from './scanners/EscalationRuleScanner.js';
+import { EntitlementProcessScanner } from './scanners/EntitlementProcessScanner.js';
 
 const _isInFrame     = window !== window.top;
 const _isSetupDomain = location.hostname.endsWith('salesforce-setup.com');
@@ -38,6 +42,10 @@ const SCANNERS = [
   new EmailTemplateScanner(),
   new PathAssistantScanner(),
   new ReportScanner(),
+  new RecordTypeScanner(),
+  new SupportProcessScanner(),
+  new EscalationRuleScanner(),
+  new EntitlementProcessScanner(),
 ];
 
 // ── URL parsing (main frame only) ──────────────────────────────────────────

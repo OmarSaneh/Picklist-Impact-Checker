@@ -69,6 +69,22 @@ export async function toolingQueryAll(soql) {
   return all;
 }
 
+export async function soapMetadata(instanceUrl, sid, body) {
+  const envelope = `<?xml version="1.0" encoding="utf-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:met="http://soap.sforce.com/2006/04/metadata">
+  <soapenv:Header><met:SessionHeader><met:sessionId>${sid}</met:sessionId></met:SessionHeader></soapenv:Header>
+  <soapenv:Body>${body}</soapenv:Body>
+</soapenv:Envelope>`;
+  const result = await chrome.runtime.sendMessage({ type: 'SOAP_METADATA', instanceUrl, body: envelope });
+  if (result.error) throw new Error(result.error);
+  const xml = result.xml;
+  if (xml.includes('soapenv:Fault') || xml.includes(':Fault>')) {
+    const msg = xml.match(/<faultstring>([^<]+)<\/faultstring>/)?.[1] || xml.slice(0, 300);
+    throw new Error(`SOAP fault: ${msg}`);
+  }
+  return xml;
+}
+
 export async function restQuery(soql) {
   const data = await sfFetch(`/services/data/v59.0/query?q=${encodeURIComponent(soql)}`);
   return data.records || [];

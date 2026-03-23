@@ -35,7 +35,11 @@ export function buildSetupUrl(type, id, objName) {
     case 'ListView':       return `/lightning/o/${objName}/list?filterName=${id}`;
     case 'EmailTemplate':  return `${setupBase}/lightning/setup/CommunicationTemplatesEmail/home`;
     case 'PathAssistant':  return `${setupBase}/lightning/setup/PathAssistant/home`;
-    case 'Report':         return `${apiBase}/lightning/r/Report/${id}/view`;
-    default:               return setupBase;
+    case 'Report':              return `${apiBase}/lightning/r/Report/${id}/view`;
+    case 'RecordType':          return `${setupBase}/lightning/setup/ObjectManager/${objName}/RecordTypes/${id}/view`;
+    case 'SupportProcess':      return `${setupBase}/lightning/setup/SupportProcesses/home`;
+    case 'EscalationRule':      return `${setupBase}/lightning/setup/CaseEscalationRules/home`;
+    case 'EntitlementProcess':  return `${setupBase}/lightning/setup/EntitlementProcesses/home`;
+    default:                    return setupBase;
   }
 }
