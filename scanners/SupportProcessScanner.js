@@ -41,7 +41,8 @@ export class SupportProcessScanner extends MetadataScanner {
             <met:type>SupportProcess</met:type>
             <met:fullNames>${fullName}</met:fullNames>
           </met:readMetadata>`);
-        if (readXml.includes(`<caseStatus>${xmlValue}</caseStatus>`)) {
+        // <caseStatus> has sub-elements; the actual value is in <status>
+        if (readXml.includes(`<status>${xmlValue}</status>`)) {
           results.push({ id: '', name: fullName, snippets: [], linkType: 'SupportProcess' });
         }
       } catch { /* skip */ }

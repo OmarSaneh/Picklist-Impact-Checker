@@ -1,4 +1,4 @@
-import { getSession, restQuery, soapMetadata } from '../api.js';
+import { getSession, soapMetadata } from '../api.js';
 import { MetadataScanner } from './MetadataScanner.js';
 
 export class EscalationRuleScanner extends MetadataScanner {
@@ -11,13 +11,6 @@ export class EscalationRuleScanner extends MetadataScanner {
     try { ({ instanceUrl, sid } = await getSession()); } catch (err) {
       return [{ id: '', name: `⚠ Session error: ${err.message}`, snippets: [], linkType: 'EscalationRule' }];
     }
-
-    // Build DeveloperName → Id map from SOQL so we can link to individual rules
-    const ruleIdMap = new Map();
-    try {
-      const soqlRules = await restQuery(`SELECT Id, DeveloperName FROM EscalationRule`);
-      for (const r of soqlRules) ruleIdMap.set(r.DeveloperName, r.Id);
-    } catch { /* optional — proceed without IDs */ }
 
     // Try both singular and plural type names
     let listXml, typeName;
@@ -53,8 +46,7 @@ export class EscalationRuleScanner extends MetadataScanner {
         for (const [, ruleXml] of ruleBlocks) {
           if (!ruleXml.includes(`<value>${xmlValue}</value>`)) continue;
           const ruleName = ruleXml.match(/<fullName>([^<]+)<\/fullName>/)?.[1] || containerName;
-          const ruleId = ruleIdMap.get(ruleName) || '';
-          results.push({ id: ruleId, name: ruleName, snippets: [], linkType: 'EscalationRule' });
+          results.push({ id: '', name: ruleName, snippets: [], linkType: 'plain' });
         }
       } catch { /* skip */ }
     }

@@ -1,21 +1,38 @@
-import { toolingQuery } from '../api.js';
+import { getSession, soapMetadata } from '../api.js';
 import { MetadataScanner } from './MetadataScanner.js';
 
 export class PathAssistantScanner extends MetadataScanner {
   get label() { return 'Path Assistants'; }
 
   async scan(_objName, value) {
-    let list;
-    try { list = await toolingQuery(`SELECT Id, DeveloperName FROM PathAssistant`); } catch { return []; }
+    let instanceUrl, sid;
+    try { ({ instanceUrl, sid } = await getSession()); } catch (err) {
+      return [{ id: '', name: `⚠ Session error: ${err.message}`, snippets: [], linkType: null }];
+    }
 
+    let listXml;
+    try {
+      listXml = await soapMetadata(instanceUrl, sid, `
+        <met:listMetadata>
+          <met:queries><met:type>PathAssistant</met:type></met:queries>
+        </met:listMetadata>`);
+    } catch { return []; }
+
+    const fullNames = [...listXml.matchAll(/<fullName>([^<]+)<\/fullName>/g)].map(m => m[1]);
+    if (!fullNames.length) return [];
+
+    const xmlValue = value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const results = [];
-    for (const pa of list) {
+
+    for (const fullName of fullNames) {
       try {
-        const detail = await toolingQuery(`SELECT Id, DeveloperName, Metadata FROM PathAssistant WHERE Id = '${pa.Id}'`);
-        if (!detail.length) continue;
-        const steps = detail[0].Metadata?.pathAssistantSteps || [];
-        if (steps.some(step => step.fieldValue === value)) {
-          results.push({ id: pa.Id, name: detail[0].DeveloperName, snippets: [], linkType: 'PathAssistant' });
+        const readXml = await soapMetadata(instanceUrl, sid, `
+          <met:readMetadata>
+            <met:type>PathAssistant</met:type>
+            <met:fullNames>${fullName}</met:fullNames>
+          </met:readMetadata>`);
+        if (readXml.includes(`<fieldValue>${xmlValue}</fieldValue>`)) {
+          results.push({ id: '', name: fullName, snippets: [], linkType: 'PathAssistant' });
         }
       } catch { /* skip */ }
     }
