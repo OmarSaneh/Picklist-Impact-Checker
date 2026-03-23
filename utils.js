@@ -38,7 +38,9 @@ export function buildSetupUrl(type, id, objName) {
     case 'Report':              return `${apiBase}/lightning/r/Report/${id}/view`;
     case 'RecordType':          return `${setupBase}/lightning/setup/ObjectManager/${objName}/RecordTypes/${id}/view`;
     case 'SupportProcess':      return `${setupBase}/lightning/setup/SupportProcesses/home`;
-    case 'EscalationRule':      return `${setupBase}/lightning/setup/CaseEscalationRules/home`;
+    case 'EscalationRule':      return id
+      ? `${setupBase}/lightning/setup/null/page?address=${encodeURIComponent(`/setup/own/entityruledetail.jsp?id=${id}&rtype=3&entity=Case`)}`
+      : `${setupBase}/lightning/setup/CaseEscalationRules/home`;
     case 'EntitlementProcess':  return `${setupBase}/lightning/setup/EntitlementProcesses/home`;
     case 'LWC':                 return `${setupBase}/lightning/setup/LightningComponentBundles/home`;
     default:                    return setupBase;
