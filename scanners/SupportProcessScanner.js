@@ -9,24 +9,27 @@ export class SupportProcessScanner extends MetadataScanner {
 
     let instanceUrl, sid;
     try { ({ instanceUrl, sid } = await getSession()); } catch (err) {
-      return [{ id: '', name: `⚠ Session error: ${err.message}`, snippets: [], linkType: 'SupportProcess' }];
+      return [{ id: '', name: `⚠ Session error: ${err.message}`, snippets: [], linkType: null }];
     }
 
-    // Try SOAP listMetadata first — it returns the exact fullName needed for readMetadata
+    // Support Processes in the Metadata API are BusinessProcess records
+    // with fullName = "Case.{processName}"
     let fullNames = [];
     try {
       const listXml = await soapMetadata(instanceUrl, sid, `
         <met:listMetadata>
-          <met:queries><met:type>SupportProcess</met:type></met:queries>
+          <met:queries><met:type>BusinessProcess</met:type></met:queries>
         </met:listMetadata>`);
-      fullNames = [...listXml.matchAll(/<fullName>([^<]+)<\/fullName>/g)].map(m => m[1]);
-    } catch { /* fall through to REST fallback */ }
+      fullNames = [...listXml.matchAll(/<fullName>([^<]+)<\/fullName>/g)]
+        .map(m => m[1])
+        .filter(n => n.startsWith('Case.'));
+    } catch { /* fall through */ }
 
-    // Fallback: get names via REST SOQL if SOAP listMetadata returned nothing
+    // Fallback: REST SOQL for process names, then construct fullName
     if (!fullNames.length) {
       try {
         const processes = await restQuery(`SELECT Id, Name FROM SupportProcess`);
-        fullNames = processes.map(p => p.Name);
+        fullNames = processes.map(p => `Case.${p.Name}`);
       } catch { return []; }
     }
     if (!fullNames.length) return [];
@@ -38,12 +41,15 @@ export class SupportProcessScanner extends MetadataScanner {
       try {
         const readXml = await soapMetadata(instanceUrl, sid, `
           <met:readMetadata>
-            <met:type>SupportProcess</met:type>
+            <met:type>BusinessProcess</met:type>
             <met:fullNames>${fullName}</met:fullNames>
           </met:readMetadata>`);
-        // <caseStatus> has sub-elements; the actual value is in <status>
-        if (readXml.includes(`<status>${xmlValue}</status>`)) {
-          results.push({ id: '', name: fullName, snippets: [], linkType: 'SupportProcess' });
+        // Values are in <values><fullName>StatusValue</fullName></values>
+        const matched = [...readXml.matchAll(/<values>([\s\S]*?)<\/values>/g)]
+          .some(([, xml]) => xml.includes(`<fullName>${xmlValue}</fullName>`));
+        if (matched) {
+          const name = fullName.replace(/^Case\./, '');
+          results.push({ id: '', name, snippets: [], linkType: 'SupportProcess' });
         }
       } catch { /* skip */ }
     }

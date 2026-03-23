@@ -1,4 +1,5 @@
 import { getSession, soapMetadata } from '../api.js';
+import { toolingQuery } from '../api.js';
 import { MetadataScanner } from './MetadataScanner.js';
 
 export class PathAssistantScanner extends MetadataScanner {
@@ -10,15 +11,24 @@ export class PathAssistantScanner extends MetadataScanner {
       return [{ id: '', name: `⚠ Session error: ${err.message}`, snippets: [], linkType: null }];
     }
 
-    let listXml;
+    // Try SOAP listMetadata — returns fullNames like "Case-Status", "Opportunity-StageName"
+    let fullNames = [];
     try {
-      listXml = await soapMetadata(instanceUrl, sid, `
+      const listXml = await soapMetadata(instanceUrl, sid, `
         <met:listMetadata>
           <met:queries><met:type>PathAssistant</met:type></met:queries>
         </met:listMetadata>`);
-    } catch { return []; }
+      fullNames = [...listXml.matchAll(/<fullName>([^<]+)<\/fullName>/g)].map(m => m[1]);
+    } catch { /* fall through */ }
 
-    const fullNames = [...listXml.matchAll(/<fullName>([^<]+)<\/fullName>/g)].map(m => m[1]);
+    // Fallback: UI-created path assistants may not appear in listMetadata;
+    // use Tooling API to get DeveloperNames and try those with readMetadata
+    if (!fullNames.length) {
+      try {
+        const list = await toolingQuery(`SELECT DeveloperName FROM PathAssistant`);
+        fullNames = list.map(pa => pa.DeveloperName).filter(Boolean);
+      } catch { /* skip */ }
+    }
     if (!fullNames.length) return [];
 
     const xmlValue = value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
