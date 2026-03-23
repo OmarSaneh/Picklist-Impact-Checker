@@ -1,4 +1,4 @@
-import { toolingQuery } from '../api.js';
+import { toolingQuery, toolingQueryAll } from '../api.js';
 import { getMatchingSnippets } from '../utils.js';
 import { MetadataScanner } from './MetadataScanner.js';
 
@@ -11,19 +11,13 @@ export class FormulaFieldScanner extends MetadataScanner {
     if (!entityDef.length) return [];
     const entityId = entityDef[0].Id;
 
+    // Include Metadata in the bulk query to avoid N+1 per-field calls
     let list;
-    try { list = await toolingQuery(`SELECT Id, DeveloperName FROM CustomField WHERE EntityDefinitionId = '${entityId}'`); } catch { return []; }
+    try { list = await toolingQueryAll(`SELECT Id, DeveloperName, Metadata FROM CustomField WHERE EntityDefinitionId = '${entityId}'`); } catch { return []; }
 
-    const results = [];
     const q = '"' + value + '"';
-    for (const field of list) {
-      try {
-        const detail = await toolingQuery(`SELECT Id, DeveloperName, Metadata FROM CustomField WHERE Id = '${field.Id}'`);
-        if (!detail.length) continue;
-        const formula = detail[0].Metadata?.formula || '';
-        if (formula.includes(q)) results.push({ id: field.Id, name: field.DeveloperName, snippets: getMatchingSnippets(formula, q), linkType: 'FormulaField' });
-      } catch { /* skip */ }
-    }
-    return results;
+    return list
+      .filter(f => (f.Metadata?.formula || '').includes(q))
+      .map(f => ({ id: f.Id, name: f.DeveloperName, snippets: getMatchingSnippets(f.Metadata.formula, q), linkType: 'FormulaField' }));
   }
 }
