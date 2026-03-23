@@ -35,21 +35,29 @@ export class PathAssistantScanner extends MetadataScanner {
     const results = [];
 
     for (const pa of paths) {
-      try {
-        // SOAP fullName: master → "Case-Status", specific RT → "RecordTypeDev_Case_Status"
-        const fullName = pa.IsMasterRecordType
-          ? `${pa.SobjectType}-${pa.SobjectProcessField}`
-          : `${rtMap.get(pa.RecordTypeId)}_${pa.SobjectType}_${pa.SobjectProcessField}`;
+      const rtDev = rtMap.get(pa.RecordTypeId) || '';
+      // Salesforce fullName format varies — try both orderings
+      const fullNames = pa.IsMasterRecordType
+        ? [`${pa.SobjectType}-${pa.SobjectProcessField}`]
+        : [
+            `${rtDev}_${pa.SobjectType}_${pa.SobjectProcessField}`,
+            `${pa.SobjectType}_${pa.SobjectProcessField}_${rtDev}`,
+          ];
 
-        const readXml = await soapMetadata(instanceUrl, sid, `
-          <met:readMetadata>
-            <met:type>PathAssistant</met:type>
-            <met:fullNames>${fullName}</met:fullNames>
-          </met:readMetadata>`);
-        if (readXml.includes(`<picklistValueName>${xmlValue}</picklistValueName>`)) {
-          results.push({ id: '', name: pa.MasterLabel, snippets: [], linkType: 'plain' });
-        }
-      } catch { /* skip */ }
+      for (const fullName of fullNames) {
+        if (!fullName || fullName.startsWith('_')) continue;
+        try {
+          const readXml = await soapMetadata(instanceUrl, sid, `
+            <met:readMetadata>
+              <met:type>PathAssistant</met:type>
+              <met:fullNames>${fullName}</met:fullNames>
+            </met:readMetadata>`);
+          if (readXml.includes(`<picklistValueName>${xmlValue}</picklistValueName>`)) {
+            results.push({ id: '', name: pa.MasterLabel, snippets: [], linkType: 'plain' });
+            break;
+          }
+        } catch { /* try next format */ }
+      }
     }
     return results;
   }
