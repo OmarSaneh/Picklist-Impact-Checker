@@ -11,7 +11,7 @@ export class PathAssistantScanner extends MetadataScanner {
       return [{ id: '', name: `⚠ Session error: ${err.message}`, snippets: [], linkType: null }];
     }
 
-    // Try SOAP listMetadata — returns fullNames like "Case-Status", "Opportunity-StageName"
+    // Primary: SOAP listMetadata returns fullNames like "Case-Status"
     let fullNames = [];
     try {
       const listXml = await soapMetadata(instanceUrl, sid, `
@@ -21,12 +21,23 @@ export class PathAssistantScanner extends MetadataScanner {
       fullNames = [...listXml.matchAll(/<fullName>([^<]+)<\/fullName>/g)].map(m => m[1]);
     } catch { /* fall through */ }
 
-    // Fallback: UI-created path assistants may not appear in listMetadata;
-    // use Tooling API to get DeveloperNames and try those with readMetadata
+    // Fallback: UI-created paths may not appear in listMetadata.
+    // Tooling API gives us the object + field names to construct the fullName.
     if (!fullNames.length) {
       try {
-        const list = await toolingQuery(`SELECT DeveloperName FROM PathAssistant`);
-        fullNames = list.map(pa => pa.DeveloperName).filter(Boolean);
+        const list = await toolingQuery(
+          `SELECT EntityDefinition.QualifiedApiName, FieldDefinition.QualifiedApiName FROM PathAssistant`
+        );
+        for (const pa of list) {
+          const obj = pa.EntityDefinition?.QualifiedApiName;
+          const fld = pa.FieldDefinition?.QualifiedApiName;
+          if (obj && fld) {
+            // QualifiedApiName may be "Status" or "Case.Status" — take the field part only
+            const fieldPart = fld.includes('.') ? fld.split('.').pop() : fld;
+            fullNames.push(`${obj}-${fieldPart}`);
+          }
+        }
+        fullNames = [...new Set(fullNames)];
       } catch { /* skip */ }
     }
     if (!fullNames.length) return [];
