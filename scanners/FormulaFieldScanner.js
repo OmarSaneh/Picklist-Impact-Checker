@@ -15,9 +15,14 @@ export class FormulaFieldScanner extends MetadataScanner {
     let list;
     try { list = await toolingQueryAll(`SELECT Id, DeveloperName, Metadata FROM CustomField WHERE EntityDefinitionId = '${entityId}'`); } catch { return []; }
 
-    const q = '"' + value + '"';
+    const qDouble = '"' + value + '"';
+    const qSingle = "'" + value + "'";
     return list
-      .filter(f => (f.Metadata?.formula || '').includes(q))
-      .map(f => ({ id: f.Id, name: f.DeveloperName, snippets: getMatchingSnippets(f.Metadata.formula, q), linkType: 'FormulaField' }));
+      .filter(f => { const formula = f.Metadata?.formula || ''; return formula.includes(qDouble) || formula.includes(qSingle); })
+      .map(f => {
+        const formula = f.Metadata.formula;
+        const q = formula.includes(qDouble) ? qDouble : qSingle;
+        return { id: f.Id, name: f.DeveloperName, snippets: getMatchingSnippets(formula, q), linkType: 'FormulaField' };
+      });
   }
 }
