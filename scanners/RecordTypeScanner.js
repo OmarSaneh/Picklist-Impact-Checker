@@ -1,29 +1,30 @@
-import { sfFetch, toolingQuery } from '../api.js';
+import { sfFetch } from '../api.js';
 import { MetadataScanner } from './MetadataScanner.js';
 
 export class RecordTypeScanner extends MetadataScanner {
   get label() { return 'Record Types'; }
 
   async scan(objName, value) {
-    let list;
+    let describe;
     try {
-      list = await toolingQuery(`SELECT Id, DeveloperName FROM RecordType WHERE SobjectType = '${objName}'`);
+      describe = await sfFetch(`/services/data/v59.0/sobjects/${objName}/describe/`);
     } catch { return []; }
-    if (!list.length) return [];
+
+    // Skip the master record type (id 012000000000000AAA) — it's not a real record type
+    const recordTypes = (describe.recordTypeInfos || []).filter(rt => !rt.master && rt.active);
+    if (!recordTypes.length) return [];
 
     const results = [];
-    for (const rt of list) {
+    for (const rt of recordTypes) {
       try {
-        // UI API returns the real available values per picklist field for this record type,
-        // whether the record type explicitly restricts them or inherits all from master.
-        const data = await sfFetch(`/services/data/v59.0/ui-api/object-info/${objName}/picklist-values/${rt.Id}`);
+        const data = await sfFetch(`/services/data/v59.0/ui-api/object-info/${objName}/picklist-values/${rt.recordTypeId}`);
         const matchingFields = Object.entries(data.picklistFieldValues || {})
           .filter(([, fd]) => (fd.values || []).some(v => v.value === value))
           .map(([fieldName]) => fieldName);
         if (matchingFields.length) {
-          results.push({ id: rt.Id, name: rt.DeveloperName, snippets: matchingFields, linkType: 'RecordType' });
+          results.push({ id: rt.recordTypeId, name: rt.developerName || rt.name, snippets: [], linkType: 'RecordType' });
         }
-      } catch { /* skip */ }
+      } catch { /* skip this record type */ }
     }
     return results;
   }
