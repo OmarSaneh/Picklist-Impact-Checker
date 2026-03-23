@@ -5,20 +5,19 @@ export class PathAssistantScanner extends MetadataScanner {
   get label() { return 'Path Assistants'; }
 
   async scan(_objName, value) {
-    let records;
-    try { records = await toolingQuery(`SELECT Id, MasterLabel, Metadata FROM PathAssistant`); } catch { return []; }
+    let list;
+    try { list = await toolingQuery(`SELECT Id, MasterLabel FROM PathAssistant`); } catch { return []; }
+
     const results = [];
-    for (const r of records) {
-      const steps = r.Metadata?.pathAssistantSteps || [];
-      const matchingSteps = steps.filter(step => step.fieldValue === value);
-      if (matchingSteps.length > 0) {
-        results.push({
-          id: r.Id,
-          name: r.MasterLabel,
-          snippets: matchingSteps.slice(0, 3).map(step => `Step: ${step.fieldValue}`),
-          linkType: 'PathAssistant',
-        });
-      }
+    for (const pa of list) {
+      try {
+        const detail = await toolingQuery(`SELECT Id, MasterLabel, Metadata FROM PathAssistant WHERE Id = '${pa.Id}'`);
+        if (!detail.length) continue;
+        const steps = detail[0].Metadata?.pathAssistantSteps || [];
+        if (steps.some(step => step.fieldValue === value)) {
+          results.push({ id: pa.Id, name: pa.MasterLabel, snippets: [], linkType: 'PathAssistant' });
+        }
+      } catch { /* skip */ }
     }
     return results;
   }
