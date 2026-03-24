@@ -97,7 +97,6 @@ function ensurePanel() {
           <button id="pic-panel-info-btn" title="About" tabindex="-1">ⓘ</button>
         </div>
         <div id="pic-panel-actions">
-          <button class="pic-header-btn" id="pic-panel-minimize" title="Minimize">—</button>
           <button class="pic-header-btn" id="pic-panel-settings" title="Settings">⚙</button>
           <button class="pic-header-btn" id="pic-panel-close" title="Close">✕</button>
         </div>
@@ -118,9 +117,19 @@ function ensurePanel() {
         <div id="pic-results-summary"></div>
         <div id="pic-results-list"></div>
       </div>
+      <div id="pic-settings-wrap" style="display:none">
+        <div id="pic-settings-list"></div>
+        <div id="pic-settings-footer">
+          <button class="pic-settings-btn pic-settings-btn--save" id="pic-settings-save-btn">Save</button>
+          <button class="pic-settings-btn pic-settings-btn--cancel" id="pic-settings-cancel-btn">Cancel</button>
+        </div>
+      </div>
     </div>
   `;
   panel.querySelector('#pic-panel-close').addEventListener('click', closePanel);
+  panel.querySelector('#pic-panel-settings').addEventListener('click', openSettings);
+  panel.querySelector('#pic-settings-save-btn').addEventListener('click', saveSettings);
+  panel.querySelector('#pic-settings-cancel-btn').addEventListener('click', closeSettings);
   document.body.appendChild(panel);
   _panel = panel;
   return panel;
@@ -140,6 +149,72 @@ function setOrgBadgeState(name, isFallback) {
     dot.classList.remove('pic-signal-dot--warn');
     warn.style.display = 'none';
   }
+}
+
+// ── Settings storage ──────────────────────────────────────────────────────
+
+function loadDisabledScanners() {
+  return new Promise(resolve => {
+    chrome.storage.local.get('pic_disabled_scanners', data => {
+      resolve(new Set(data.pic_disabled_scanners || []));
+    });
+  });
+}
+
+function saveDisabledScanners(disabled) {
+  return new Promise(resolve => {
+    chrome.storage.local.set({ pic_disabled_scanners: [...disabled] }, resolve);
+  });
+}
+
+let _settingsRestoreState = null;
+
+async function openSettings() {
+  if (!_panel) return;
+  _settingsRestoreState = {
+    progress: _panel.querySelector('#pic-progress-wrap').style.display,
+    results:  _panel.querySelector('#pic-results-wrap').style.display,
+  };
+  const disabled = await loadDisabledScanners();
+  const list = _panel.querySelector('#pic-settings-list');
+  list.innerHTML = SCANNERS.map(s => {
+    const on = !disabled.has(s.label);
+    return `<div class="pic-settings-row${on ? ' pic-settings-row--on' : ''}">
+      <span class="pic-settings-label">${escapeHtml(s.label.toUpperCase())}</span>
+      <label class="pic-toggle">
+        <input type="checkbox" data-label="${escapeHtml(s.label)}"${on ? ' checked' : ''}>
+        <span class="pic-toggle-slider"></span>
+      </label>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.pic-toggle input').forEach(cb => {
+    cb.addEventListener('change', () => {
+      cb.closest('.pic-settings-row').classList.toggle('pic-settings-row--on', cb.checked);
+    });
+  });
+  _panel.querySelector('#pic-progress-wrap').style.display = 'none';
+  _panel.querySelector('#pic-results-wrap').style.display = 'none';
+  _panel.querySelector('#pic-settings-wrap').style.display = 'flex';
+}
+
+function closeSettings() {
+  if (!_panel) return;
+  _panel.querySelector('#pic-settings-wrap').style.display = 'none';
+  if (_settingsRestoreState) {
+    _panel.querySelector('#pic-progress-wrap').style.display = _settingsRestoreState.progress;
+    _panel.querySelector('#pic-results-wrap').style.display  = _settingsRestoreState.results;
+    _settingsRestoreState = null;
+  }
+}
+
+async function saveSettings() {
+  if (!_panel) return;
+  const disabled = new Set();
+  _panel.querySelectorAll('#pic-settings-list .pic-toggle input').forEach(cb => {
+    if (!cb.checked) disabled.add(cb.dataset.label);
+  });
+  await saveDisabledScanners(disabled);
+  closeSettings();
 }
 
 function showPanel(subtitle) {
@@ -266,9 +341,12 @@ async function runScanForValue(objName, value) {
   const progressBar = panel.querySelector('#pic-progress-bar');
   const progressLabel = panel.querySelector('#pic-progress-label');
 
+  const disabled = await loadDisabledScanners();
+  const activeScanners = SCANNERS.filter(s => !disabled.has(s.label));
+
   // Pool of active skeleton DOM elements, oldest first (FIFO)
   const skeletonQueue = [];
-  let remaining = SCANNERS.length;
+  let remaining = activeScanners.length;
   let completed = 0;
   let totalHits = 0;
   const cleanLabels = [];
@@ -285,7 +363,7 @@ async function runScanForValue(objName, value) {
 
   replenishSkeletons();
 
-  await Promise.all(SCANNERS.map(async (scanner) => {
+  await Promise.all(activeScanners.map(async (scanner) => {
       let items;
       try {
         items = await scanner.scan(objName, value);
@@ -311,7 +389,7 @@ async function runScanForValue(objName, value) {
       replenishSkeletons();
 
       // Progress bar
-      progressBar.style.width = `${Math.round((completed / SCANNERS.length) * 100)}%`;
+      progressBar.style.width = `${Math.round((completed / activeScanners.length) * 100)}%`;
 
       if (remaining > 0) {
         progressLabel.textContent = `Scanned ${scanner.label}… (${remaining} remaining)`;
@@ -325,9 +403,11 @@ async function runScanForValue(objName, value) {
           e.textContent = 'Clean! No hardcoded references detected.';
           list.appendChild(e);
         }
-        summaryEl.textContent = totalHits === 0
+        const summaryText = totalHits === 0
           ? `No references found for "${value}"`
           : `${totalHits} reference${totalHits !== 1 ? 's' : ''} found for "${value}"`;
+        summaryEl.innerHTML = `${escapeHtml(summaryText)} <button class="pic-rescan-btn" title="Re-scan">↺</button>`;
+        summaryEl.querySelector('.pic-rescan-btn').addEventListener('click', () => runScanForValue(objName, value));
       }
   }));
 
