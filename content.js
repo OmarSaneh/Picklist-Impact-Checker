@@ -5,7 +5,7 @@
    2. Child iframe on salesforce.com       → table row injection + panel
    ───────────────────────────────────────────────────────────────────────── */
 
-import { getSession, setSession, sfFetch, getOrgName } from './api.js';
+import { getSession, getSessionCached, setSession, sfFetch, getOrgName } from './api.js';
 import { escapeHtml, buildSetupUrl } from './utils.js';
 import { ValidationRuleScanner }  from './scanners/ValidationRuleScanner.js';
 import { FormulaFieldScanner }    from './scanners/FormulaFieldScanner.js';
@@ -103,9 +103,10 @@ function ensurePanel() {
         </div>
       </div>
       <div id="pic-panel-org-badge">
-        <span class="pic-signal-dot"></span>
+        <span id="pic-signal-dot" class="pic-signal-dot"></span>
         <span id="pic-panel-org">—</span>
       </div>
+      <div id="pic-panel-session-warn" style="display:none">Please refresh your screen</div>
       <div id="pic-panel-subtitle"></div>
     </div>
     <div id="pic-panel-body">
@@ -127,10 +128,18 @@ function ensurePanel() {
 
 function closePanel() { if (_panel) _panel.classList.remove('pic-open'); }
 
-function setOrgName(name) {
+function setOrgBadgeState(name, isFallback) {
   if (!_panel) return;
-  const el = _panel.querySelector('#pic-panel-org');
-  if (el && name) el.textContent = name;
+  if (name) _panel.querySelector('#pic-panel-org').textContent = name;
+  const dot = _panel.querySelector('#pic-signal-dot');
+  const warn = _panel.querySelector('#pic-panel-session-warn');
+  if (isFallback) {
+    dot.classList.add('pic-signal-dot--warn');
+    warn.style.display = '';
+  } else {
+    dot.classList.remove('pic-signal-dot--warn');
+    warn.style.display = 'none';
+  }
 }
 
 function showPanel(subtitle) {
@@ -248,7 +257,9 @@ async function runScanForValue(objName, value) {
   panel.offsetWidth;
   panel.classList.add('pic-open');
 
-  getOrgName().then(name => { if (name) setOrgName(name); }).catch(() => {});
+  getOrgName().then(name => {
+    setOrgBadgeState(name || null, getSessionCached()?.fallback === true);
+  }).catch(() => {});
 
   const list = panel.querySelector('#pic-results-list');
   const summaryEl = panel.querySelector('#pic-results-summary');
@@ -260,6 +271,7 @@ async function runScanForValue(objName, value) {
   let remaining = SCANNERS.length;
   let completed = 0;
   let totalHits = 0;
+  const cleanLabels = [];
 
   // Keep up to SKELETON_CONCURRENCY anonymous skeletons, capped by remaining count
   function replenishSkeletons() {
@@ -273,8 +285,7 @@ async function runScanForValue(objName, value) {
 
   replenishSkeletons();
 
-  await Promise.all(
-    SCANNERS.map(async (scanner) => {
+  await Promise.all(SCANNERS.map(async (scanner) => {
       let items;
       try {
         items = await scanner.scan(objName, value);
@@ -292,6 +303,7 @@ async function runScanForValue(objName, value) {
       if (hits > 0) {
         renderResultGroup(slot, scanner.label, items, objName);
       } else {
+        cleanLabels.push(scanner.label);
         slot.remove();
       }
 
@@ -317,8 +329,17 @@ async function runScanForValue(objName, value) {
           ? `No references found for "${value}"`
           : `${totalHits} reference${totalHits !== 1 ? 's' : ''} found for "${value}"`;
       }
-    })
-  );
+  }));
+
+  // ── "Scanned clean" section ──────────────────────────────────────────────
+  if (cleanLabels.length > 0) {
+    const section = document.createElement('div');
+    section.className = 'pic-clean-section';
+    section.innerHTML = `
+      <div class="pic-clean-header">Scanned — no references found (${cleanLabels.length})</div>
+      <div class="pic-clean-tags">${cleanLabels.map(l => `<span class="pic-clean-tag">${escapeHtml(l)}</span>`).join('')}</div>`;
+    list.appendChild(section);
+  }
 }
 
 // ── Floating value picker (main frame only) ────────────────────────────────
@@ -346,7 +367,7 @@ async function injectValuePicker(ctx) {
   const body = picker.querySelector('#pic-picker-body');
   try {
     await getSession();
-    getOrgName().then(name => { if (name) setOrgName(name); }).catch(() => {});
+    getOrgName().then(name => { setOrgBadgeState(name || null, getSessionCached()?.fallback === true); }).catch(() => {});
     const result = await fetchPicklistValues(ctx.objName, ctx.fieldName);
     if (!result) { body.innerHTML = '<div class="pic-picker-msg">Field not found or not a picklist.</div>'; return; }
     picker.querySelector('#pic-picker-field').textContent = `${ctx.objName} · ${result.fieldLabel}`;

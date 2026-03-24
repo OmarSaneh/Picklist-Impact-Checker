@@ -136,6 +136,18 @@
   display: inline-block;
 }
 
+.pic-signal-dot--warn {
+  background: #ea4c4c;
+}
+
+#pic-panel-session-warn {
+  font-size: 11px;
+  color: #ea4c4c;
+  font-weight: 600;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
 #pic-panel-org {
   font-size: 13px;
   font-weight: 600;
@@ -402,6 +414,38 @@
 
 .pic-picker-error {
   color: #c23934;
+}
+
+/* ── Scanned-clean section ─────────────────────────────────────────────────*/
+
+.pic-clean-section {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid #e8e8e8;
+}
+
+.pic-clean-header {
+  font-size: 10px;
+  font-weight: 700;
+  color: #706e6b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+
+.pic-clean-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.pic-clean-tag {
+  font-size: 10px;
+  color: #706e6b;
+  background: #f3f3f3;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  padding: 2px 7px;
 }
 
 /* ── Skeleton loading ──────────────────────────────────────────────────────*/
