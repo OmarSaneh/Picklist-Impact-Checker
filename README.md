@@ -64,8 +64,8 @@ When you have multiple Salesforce orgs open (e.g. Production + a Sandbox), there
 
 | Indicator | Meaning |
 |---|---|
-| 🟢 `omar.saneh@brp.com.jaydev` | Session matched the exact domain of the current tab — you are scanning the right org |
-| 🔴 `omar.saneh@brp.com.jaydev` + **Please refresh your screen** | A fallback cookie was used because the exact-domain match failed — the session may belong to a different org. Refresh the Salesforce tab to re-establish a clean session |
+| 🟢 `john.doe@acme.com.sandbox` | Session matched the exact domain of the current tab — you are scanning the right org |
+| 🔴 `john.doe@acme.com.sandbox` + **Please refresh your screen** | A fallback cookie was used because the exact-domain match failed — the session may belong to a different org. Refresh the Salesforce tab to re-establish a clean session |
 
 The username is fetched via the OAuth `/userinfo` endpoint immediately after each scan starts, so the badge reflects the live authenticated identity rather than any cached assumption. If the badge shows a red dot, do not trust the scan results until you have refreshed and confirmed a green dot.
 
