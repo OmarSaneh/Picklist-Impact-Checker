@@ -94,7 +94,7 @@ function ensurePanel() {
       <div id="pic-panel-header-row">
         <div id="pic-panel-title-wrap">
           <span id="pic-panel-title">Picklist Impact Checker</span>
-          <button id="pic-panel-info-btn" title="About" tabindex="-1">ⓘ</button>
+          <button id="pic-panel-info-btn" title="About" tabindex="-1">i</button>
         </div>
         <div id="pic-panel-actions">
           <button class="pic-header-btn" id="pic-panel-settings" title="Settings">⚙</button>
@@ -102,8 +102,8 @@ function ensurePanel() {
         </div>
       </div>
       <div id="pic-panel-org-badge">
-        <span id="pic-signal-dot" class="pic-signal-dot"></span>
         <span id="pic-panel-org">—</span>
+        <span id="pic-signal-dot" class="pic-signal-dot"></span>
       </div>
       <div id="pic-panel-session-warn" style="display:none">Please refresh your screen</div>
       <div id="pic-panel-subtitle"></div>
@@ -140,7 +140,13 @@ function ensurePanel() {
   const aboutPopover = panel.querySelector('#pic-about-popover');
   infoBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    aboutPopover.style.display = aboutPopover.style.display === 'none' ? 'block' : 'none';
+    if (aboutPopover.style.display === 'none') {
+      const header = panel.querySelector('#pic-panel-header');
+      aboutPopover.style.top = (header.offsetTop + header.offsetHeight + 6) + 'px';
+      aboutPopover.style.display = 'block';
+    } else {
+      aboutPopover.style.display = 'none';
+    }
   });
   document.addEventListener('click', (e) => {
     if (!aboutPopover.contains(e.target) && e.target !== infoBtn) {

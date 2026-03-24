@@ -52,7 +52,8 @@
   background: #032d60;
   color: #fff;
   flex-shrink: 0;
-  border-radius: 11px 11px 0 0;
+  border-radius: 10px;
+  margin: 10px 10px 0 10px;
 }
 
 #pic-panel-header-row {
@@ -69,25 +70,34 @@
 }
 
 #pic-panel-title {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.02em;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 #pic-panel-info-btn {
-  background: none;
+  background: rgba(255, 255, 255, 0.9);
   border: none;
-  color: #fff;
-  font-size: 13px;
+  color: #032d60;
+  font-size: 12px;
+  font-weight: 900;
+  font-style: italic;
   cursor: pointer;
   padding: 0;
-  opacity: 0.55;
   line-height: 1;
   flex-shrink: 0;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #pic-panel-info-btn:hover {
-  opacity: 0.9;
+  background: #fff;
 }
 
 #pic-panel-actions {
@@ -103,15 +113,14 @@
   font-size: 20px;
   cursor: pointer;
   padding: 4px 7px;
-  opacity: 0.6;
+  opacity: 1;
   line-height: 1;
   border-radius: 6px;
   flex-shrink: 0;
 }
 
 .pic-header-btn:hover {
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.18);
 }
 
 #pic-panel-settings {
@@ -125,8 +134,9 @@
   align-items: center;
   gap: 7px;
   background: rgba(255, 255, 255, 0.1);
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
   border-radius: 13px;
-  padding: 4px 10px 4px 7px;
+  padding: 4px 8px 4px 10px;
   width: fit-content;
   margin-bottom: 5px;
 }
@@ -174,7 +184,6 @@
 
 #pic-about-popover {
   position: absolute;
-  top: 88px;
   left: 12px;
   right: 12px;
   background: #fff;
