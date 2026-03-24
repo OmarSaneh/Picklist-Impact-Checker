@@ -25,16 +25,16 @@ When you're on a picklist field in Salesforce Setup (Object Manager → Fields &
 | 9 | **Approval Processes** | All objects | Checks entry criteria and step conditions via SOAP Metadata API |
 | 10 | **List Views** | All objects | Checks SOQL filter query for the value |
 | 11 | **Email Templates** | Org-wide | Checks HTML and plain-text body |
-| 12 | **Path Assistants** ⏳ | All objects | Checks step `fieldValue` entries — pending validation |
+| 12 | **Path Assistants** ⏳ | All objects | Checks step picklist value entries — pending validation |
 | 13 | **Reports** | Org-wide | Checks report filter values (supports multi-value filters) |
 | 14 | **Record Types** | All objects | Checks which picklist values are enabled per record type |
 | 15 | **Support Processes** | Case only | Checks which Status values are active in each support process |
 | 16 | **Escalation Rules** | Case only | Checks rule entry criteria for the value |
 | 17 | **Entitlement Processes** | Case & WorkOrder | Checks milestone criteria conditions |
 | 18 | **LWC** | Org-wide | Full-text search of component JS files |
-| 19 | **Assignment Rules** ⏳ | Case & Lead | Checks rule criteria values — pending validation |
-| 20 | **Sharing Rules** ⏳ | All objects | Checks criteria-based sharing rule conditions — pending validation |
-| 21 | **Quick Actions** ⏳ | All objects | Checks predefined field values on object-scoped actions — pending validation |
+| 19 | **Assignment Rules** | Case & Lead | Checks rule criteria values |
+| 20 | **Sharing Rules** | All objects | Checks criteria-based sharing rule conditions |
+| 21 | **Quick Actions** | All objects | Checks field overrides with literal picklist values on object-scoped actions |
 | 22 | **Sales & Lead Processes** ⏳ | Opportunity & Lead | Checks which Stage/Status values are active in each process — pending validation |
 
 ---

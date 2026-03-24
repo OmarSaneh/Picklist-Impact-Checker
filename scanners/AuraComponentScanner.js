@@ -1,4 +1,4 @@
-import { toolingQuery } from '../api.js';
+import { toolingQueryAll } from '../api.js';
 import { getMatchingSnippets } from '../utils.js';
 import { MetadataScanner } from './MetadataScanner.js';
 
@@ -8,7 +8,7 @@ export class AuraComponentScanner extends MetadataScanner {
   async scan(_objName, value) {
     let records;
     try {
-      records = await toolingQuery(
+      records = await toolingQueryAll(
         `SELECT Id, AuraDefinitionBundleId, AuraDefinitionBundle.DeveloperName, DefType, Source FROM AuraDefinition WHERE DefType IN ('COMPONENT','CONTROLLER','HELPER')`
       );
     } catch { return []; }

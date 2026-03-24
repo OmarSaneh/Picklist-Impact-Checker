@@ -25,6 +25,10 @@ import { SupportProcessScanner }  from './scanners/SupportProcessScanner.js';
 import { EscalationRuleScanner }  from './scanners/EscalationRuleScanner.js';
 import { EntitlementProcessScanner } from './scanners/EntitlementProcessScanner.js';
 import { LwcScanner }                from './scanners/LwcScanner.js';
+import { AssignmentRuleScanner }     from './scanners/AssignmentRuleScanner.js';
+import { SharingRuleScanner }        from './scanners/SharingRuleScanner.js';
+import { QuickActionScanner }        from './scanners/QuickActionScanner.js';
+import { SalesProcessScanner }       from './scanners/SalesProcessScanner.js';
 
 const _isInFrame     = window !== window.top;
 const _isSetupDomain = location.hostname.endsWith('salesforce-setup.com');
@@ -48,6 +52,10 @@ const SCANNERS = [
   new EscalationRuleScanner(),
   new EntitlementProcessScanner(),
   new LwcScanner(),
+  new AssignmentRuleScanner(),
+  new SharingRuleScanner(),
+  new QuickActionScanner(),
+  new SalesProcessScanner(),
 ];
 
 // ── URL parsing (main frame only) ──────────────────────────────────────────
@@ -168,31 +176,131 @@ function renderResults(allResults, objName, value) {
   }
 }
 
-// ── Run scan ───────────────────────────────────────────────────────────────
+// ── Progressive scan rendering ────────────────────────────────────────────
+
+const SKELETON_CONCURRENCY = 3;
+
+function renderSkeleton(el) {
+  el.className = 'pic-result-group pic-result-group--loading';
+  el.innerHTML = `
+    <div class="pic-result-group-header">
+      <span class="pic-skeleton-title"></span>
+      <span class="pic-skeleton-badge"></span>
+    </div>
+    <div class="pic-skeleton-body">
+      <div class="pic-skeleton-line"></div>
+      <div class="pic-skeleton-line pic-skeleton-line--short"></div>
+    </div>`;
+}
+
+function renderResultGroup(el, label, items, objName) {
+  const hits = items.filter(r => r.linkType !== null).length;
+  el.className = 'pic-result-group';
+  const header = document.createElement('div'); header.className = 'pic-result-group-header';
+  header.innerHTML = `<span class="pic-result-type-label">${escapeHtml(label)}</span><span class="pic-result-count-badge">${hits}</span>`;
+  const body = document.createElement('div'); body.className = 'pic-result-group-body';
+  header.addEventListener('click', () => { body.style.display = body.style.display === 'none' ? '' : 'none'; });
+  for (const item of items) {
+    const div = document.createElement('div'); div.className = 'pic-result-item';
+    const url = (item.linkType && item.linkType !== 'plain') ? buildSetupUrl(item.linkType, item.id, objName) : null;
+    const nameHtml = url ? `<a href="${escapeHtml(url)}" target="_blank">${escapeHtml(item.name)}</a>`
+      : item.linkType === null ? `<span class="pic-result-error">${escapeHtml(item.name)}</span>`
+      : `<span>${escapeHtml(item.name)}</span>`;
+    let html = `<div class="pic-result-item-name">${nameHtml}</div>`;
+    for (const snippet of item.snippets) html += `<div class="pic-result-snippet">${escapeHtml(snippet)}</div>`;
+    div.innerHTML = html; body.appendChild(div);
+  }
+  el.innerHTML = '';
+  el.appendChild(header);
+  el.appendChild(body);
+}
+
+// ── Run scan ──────────────────────────────────────────────────────────────
 
 async function runScanForValue(objName, value) {
-  showPanel(`Scanning "${value}" on ${objName}`);
-  setProgress(0, 'Starting scan…');
+  const panel = ensurePanel();
+  panel.querySelector('#pic-panel-subtitle').textContent = `Scanning "${value}" on ${objName}`;
+  panel.querySelector('#pic-progress-wrap').style.display = '';
+  panel.querySelector('#pic-progress-bar').style.width = '0%';
+  panel.querySelector('#pic-progress-label').textContent = 'Starting scan…';
+  panel.querySelector('#pic-results-wrap').style.display = '';
+  panel.querySelector('#pic-results-summary').textContent = `Scanning "${value}"…`;
+  panel.querySelector('#pic-results-list').innerHTML = '';
+  panel.classList.remove('pic-open');
+  panel.offsetWidth;
+  panel.classList.add('pic-open');
+
   getOrgName().then(name => { if (name) setOrgName(name); }).catch(() => {});
 
+  const list = panel.querySelector('#pic-results-list');
+  const summaryEl = panel.querySelector('#pic-results-summary');
+  const progressBar = panel.querySelector('#pic-progress-bar');
+  const progressLabel = panel.querySelector('#pic-progress-label');
+
+  // Pool of active skeleton DOM elements, oldest first (FIFO)
+  const skeletonQueue = [];
+  let remaining = SCANNERS.length;
   let completed = 0;
-  const entries = await Promise.all(
-    SCANNERS.map(async scanner => {
+  let totalHits = 0;
+
+  // Keep up to SKELETON_CONCURRENCY anonymous skeletons, capped by remaining count
+  function replenishSkeletons() {
+    while (skeletonQueue.length < Math.min(SKELETON_CONCURRENCY, remaining)) {
+      const el = document.createElement('div');
+      renderSkeleton(el);
+      list.appendChild(el);
+      skeletonQueue.push(el);
+    }
+  }
+
+  replenishSkeletons();
+
+  await Promise.all(
+    SCANNERS.map(async (scanner) => {
+      let items;
       try {
-        const result = await scanner.scan(objName, value);
-        setProgress(Math.round((++completed / SCANNERS.length) * 95), `Scanned ${scanner.label}…`);
-        return [scanner.label, result];
+        items = await scanner.scan(objName, value);
       } catch (err) {
-        setProgress(Math.round((++completed / SCANNERS.length) * 95), `Error in ${scanner.label}`);
-        return [scanner.label, [{ id: '', name: `⚠ Error: ${err.message}`, snippets: [], linkType: null }]];
+        items = [{ id: '', name: `⚠ Error: ${err.message}`, snippets: [], linkType: null }];
+      }
+
+      completed++;
+      remaining--;
+      const hits = items.filter(r => r.linkType !== null).length;
+      totalHits += hits;
+
+      // Claim the oldest skeleton — transform it into a result or remove it
+      const slot = skeletonQueue.shift();
+      if (hits > 0) {
+        renderResultGroup(slot, scanner.label, items, objName);
+      } else {
+        slot.remove();
+      }
+
+      // Append a fresh skeleton at the bottom if slots still needed
+      replenishSkeletons();
+
+      // Progress bar
+      progressBar.style.width = `${Math.round((completed / SCANNERS.length) * 100)}%`;
+
+      if (remaining > 0) {
+        progressLabel.textContent = `Scanned ${scanner.label}… (${remaining} remaining)`;
+        summaryEl.textContent = totalHits > 0
+          ? `${totalHits} hit${totalHits !== 1 ? 's' : ''} so far · ${remaining} more scanning…`
+          : `Scanning… (${remaining} remaining)`;
+      } else {
+        panel.querySelector('#pic-progress-wrap').style.display = 'none';
+        if (totalHits === 0) {
+          const e = document.createElement('div'); e.className = 'pic-empty-state';
+          e.textContent = 'Clean! No hardcoded references detected.';
+          list.appendChild(e);
+        }
+        summaryEl.textContent = totalHits === 0
+          ? `No references found for "${value}"`
+          : `${totalHits} reference${totalHits !== 1 ? 's' : ''} found for "${value}"`;
       }
     })
   );
-  const allResults = Object.fromEntries(entries);
-
-  setProgress(100, 'Scan complete.');
-  await new Promise(r => setTimeout(r, 400));
-  renderResults(allResults, objName, value);
 }
 
 // ── Floating value picker (main frame only) ────────────────────────────────

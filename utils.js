@@ -42,6 +42,15 @@ export function buildSetupUrl(type, id, objName) {
       ? `${setupBase}/lightning/setup/null/page?address=${encodeURIComponent(`/setup/own/entityruledetail.jsp?id=${id}&rtype=3&entity=Case`)}`
       : `${setupBase}/lightning/setup/CaseEscalationRules/home`;
     case 'EntitlementProcess':  return `${setupBase}/lightning/setup/EntitlementProcesses/home`;
+    case 'SharingRule': {
+      if (!id) return `${setupBase}/lightning/setup/SecuritySharing/home`;
+      const [ruleId, keyPrefix] = id.includes(':') ? id.split(':') : [id, ''];
+      const address = keyPrefix
+        ? `/setup/own/shareRule.jsp?id=${ruleId}&entity=${keyPrefix}`
+        : `/${ruleId}`;
+      return `${setupBase}/lightning/setup/SecuritySharing/page?address=${encodeURIComponent(address)}`;
+    }
+    case 'QuickAction':         return `${setupBase}/lightning/setup/ObjectManager/${objName}/ButtonsLinksActions/${id}/view`;
     case 'LWC':                 return `${setupBase}/lightning/setup/LightningComponentBundles/home`;
     default:                    return setupBase;
   }

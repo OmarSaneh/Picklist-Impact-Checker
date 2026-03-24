@@ -5,10 +5,16 @@ export class ReportScanner extends MetadataScanner {
   get label() { return 'Reports'; }
 
   async scan(_objName, value) {
-    let listData;
-    try { listData = await sfFetch(`/services/data/v59.0/analytics/reports?pageSize=50`); } catch { return []; }
-
-    const reports = listData.reports || listData || [];
+    const reports = [];
+    let url = `/services/data/v59.0/analytics/reports`;
+    try {
+      while (url) {
+        const data = await sfFetch(url);
+        const page = Array.isArray(data) ? data : (data.reports || []);
+        reports.push(...page);
+        url = Array.isArray(data) ? null : (data.nextPageUrl || null);
+      }
+    } catch { return []; }
     const results = [];
 
     for (const report of reports) {

@@ -1,4 +1,4 @@
-import { toolingQuery } from '../api.js';
+import { toolingQuery, toolingQueryAll } from '../api.js';
 import { MetadataScanner } from './MetadataScanner.js';
 
 const NODE_TYPES = ['decisions','assignments','recordLookups','recordCreates','recordUpdates','recordDeletes','loops','screens','actionCalls','subflows','waits','customErrors'];
@@ -24,7 +24,7 @@ export class FlowScanner extends MetadataScanner {
 
   async scan(_objName, value) {
     let flowList;
-    try { flowList = await toolingQuery(`SELECT Id, MasterLabel FROM Flow WHERE Status = 'Active' LIMIT 50`); }
+    try { flowList = await toolingQueryAll(`SELECT Id, MasterLabel FROM Flow WHERE Status = 'Active'`); }
     catch { return []; }
     const results = [];
     const jq = '"' + value + '"';

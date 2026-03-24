@@ -117,14 +117,32 @@ error messages that should be visible to the user.
 |---|---|---|
 | ValidationRule | Tooling SOQL | `EntityDefinition.QualifiedApiName` |
 | FormulaField | Tooling SOQL | `EntityDefinitionId` (resolved from EntityDefinition) |
-| Flow | Tooling SOQL | None (LIMIT 50, Active only) |
+| Flow | Tooling SOQL | None (Active only, fully paginated) |
 | ApexClass | Tooling SOQL | None (all classes) |
 | ApexTrigger | Tooling SOQL | None (Active only) |
 | WorkflowRule | Tooling SOQL | `TableEnumOrId` with entity ID |
-| AuraComponent | Tooling SOQL | None; results grouped by bundle |
+| AuraComponent | Tooling SOQL | None; results grouped by bundle (fully paginated) |
 | VisualforcePage | Tooling SOQL | None |
 | ApprovalProcess | SOAP Metadata API | `fullName` prefix `${objName}.` |
 | ListView | Standard REST | Scoped to `objName` by URL path |
 | EmailTemplate | Standard REST SOQL | None |
 | PathAssistant | Tooling SOQL | None |
-| Report | Analytics REST | None (first 50 reports) |
+| Report | Analytics REST | None (fully paginated via nextPageUrl) |
+
+---
+
+## Known Improvements / Technical Debt
+
+### Body/Source/Markup truncation in Tooling API SOQL
+The following scanners query large text fields via bulk SOQL, which may return truncated content
+for very large files. The safe pattern is a two-step fetch: list by ID first, then fetch each
+record individually via `/tooling/sobjects/{Type}/{Id}` (the same pattern used by ValidationRule
+and WorkflowRule scanners):
+
+| Scanner | Field at risk |
+|---|---|
+| `ApexClassScanner` | `Body` on `ApexClass` |
+| `ApexTriggerScanner` | `Body` on `ApexTrigger` |
+| `AuraComponentScanner` | `Source` on `AuraDefinition` |
+| `LwcScanner` | `Source` on `LightningComponentResource` |
+| `VisualforceScanner` | `Markup` on `ApexPage` / `ApexComponent` |
