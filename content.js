@@ -108,6 +108,14 @@ function ensurePanel() {
       <div id="pic-panel-session-warn" style="display:none">Please refresh your screen</div>
       <div id="pic-panel-subtitle"></div>
     </div>
+    <div id="pic-about-popover" style="display:none">
+      <div id="pic-about-title">Picklist Impact Checker <span id="pic-about-version">v1.0.0</span></div>
+      <div id="pic-about-desc">Scans 22 Salesforce metadata types for hardcoded picklist values.</div>
+      <div id="pic-about-links">
+        <a href="https://github.com/OmarSaneh/Picklist-Impact-Checker/issues/new?labels=bug&template=bug_report.md" target="_blank" class="pic-about-link">🐛 Report a bug</a>
+        <a href="https://github.com/OmarSaneh/Picklist-Impact-Checker/issues/new?labels=enhancement&template=feature_request.md" target="_blank" class="pic-about-link">💡 Request a feature</a>
+      </div>
+    </div>
     <div id="pic-panel-body">
       <div id="pic-progress-wrap">
         <div id="pic-progress-bar-track"><div id="pic-progress-bar"></div></div>
@@ -128,6 +136,17 @@ function ensurePanel() {
   `;
   panel.querySelector('#pic-panel-close').addEventListener('click', closePanel);
   panel.querySelector('#pic-panel-settings').addEventListener('click', openSettings);
+  const infoBtn = panel.querySelector('#pic-panel-info-btn');
+  const aboutPopover = panel.querySelector('#pic-about-popover');
+  infoBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    aboutPopover.style.display = aboutPopover.style.display === 'none' ? 'block' : 'none';
+  });
+  document.addEventListener('click', (e) => {
+    if (!aboutPopover.contains(e.target) && e.target !== infoBtn) {
+      aboutPopover.style.display = 'none';
+    }
+  });
   panel.querySelector('#pic-settings-save-btn').addEventListener('click', saveSettings);
   panel.querySelector('#pic-settings-cancel-btn').addEventListener('click', closeSettings);
   document.body.appendChild(panel);
