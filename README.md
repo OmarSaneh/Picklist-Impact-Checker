@@ -58,6 +58,19 @@ When you're on a picklist field in Salesforce Setup (Object Manager → Fields &
 
 ---
 
+## Org verification
+
+When you have multiple Salesforce orgs open (e.g. Production + a Sandbox), there is a risk that the extension authenticates against the wrong org. To prevent silent mis-scans, the panel header always shows **which org and user the session belongs to**:
+
+| Indicator | Meaning |
+|---|---|
+| 🟢 `omar.saneh@brp.com.jaydev` | Session matched the exact domain of the current tab — you are scanning the right org |
+| 🔴 `omar.saneh@brp.com.jaydev` + **Please refresh your screen** | A fallback cookie was used because the exact-domain match failed — the session may belong to a different org. Refresh the Salesforce tab to re-establish a clean session |
+
+The username is fetched via the OAuth `/userinfo` endpoint immediately after each scan starts, so the badge reflects the live authenticated identity rather than any cached assumption. If the badge shows a red dot, do not trust the scan results until you have refreshed and confirmed a green dot.
+
+---
+
 ## Tech stack
 
 - **Manifest V3** Chrome Extension

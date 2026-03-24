@@ -7,6 +7,21 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type === 'GET_USERINFO') {
+    (async () => {
+      try {
+        const res = await fetch(`${msg.instanceUrl}/services/oauth2/userinfo`, {
+          headers: { 'Authorization': `Bearer ${msg.sid}` },
+        });
+        const data = await res.json();
+        sendResponse({ username: data.preferred_username || data.username || null });
+      } catch (err) {
+        sendResponse({ error: err.message });
+      }
+    })();
+    return true;
+  }
+
   if (msg.type === 'SOAP_METADATA') {
     (async () => {
       try {
@@ -36,6 +51,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
       // Try to get the sid cookie from the API domain.
       let cookie = await chrome.cookies.get({ url: instanceUrl, name: 'sid' });
+      let usedFallback = false;
 
       if (!cookie) {
         // Fallback: search all SF cookies and match against the known org domain.
@@ -52,6 +68,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           const d = c.domain.replace(/^\./, '');
           return apiHostname.includes(d) || (tabHostname && tabHostname.includes(d));
         }) || null;
+        if (cookie) usedFallback = true;
       }
 
       if (!cookie) {
@@ -61,7 +78,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
       // SF session IDs are URL-encoded in the cookie (! → %21). Always decode.
       const sid = decodeURIComponent(cookie.value);
-      sendResponse({ sid, instanceUrl });
+      sendResponse({ sid, instanceUrl, fallback: usedFallback });
     } catch (err) {
       sendResponse({ error: err.message });
     }

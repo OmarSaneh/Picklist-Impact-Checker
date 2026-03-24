@@ -51,8 +51,9 @@ let _orgName = null;
 export async function getOrgName() {
   if (_orgName) return _orgName;
   try {
-    const data = await sfFetch('/services/data/v59.0/query?q=SELECT+Name+FROM+Organization+LIMIT+1');
-    _orgName = data.records?.[0]?.Name || null;
+    const { instanceUrl, sid } = await getSession();
+    const result = await chrome.runtime.sendMessage({ type: 'GET_USERINFO', instanceUrl, sid });
+    _orgName = result?.username || null;
   } catch { }
   return _orgName;
 }
