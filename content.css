@@ -23,14 +23,15 @@
 
 #pic-panel {
   position: fixed;
-  top: 0;
-  right: -440px;
+  top: 12px;
+  bottom: 12px;
+  right: -452px;
   width: 420px;
-  height: 100vh;
   z-index: 99999;
   background: #fff;
-  border-left: 1px solid #dddbda;
-  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  border: 1px solid #dddbda;
+  box-shadow: -2px 0 32px rgba(0, 0, 0, 0.18);
   display: flex;
   flex-direction: column;
   font-family: 'Salesforce Sans', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -41,56 +42,116 @@
 }
 
 #pic-panel.pic-open {
-  right: 0;
+  right: 12px;
 }
 
 /* ── Panel header ──────────────────────────────────────────────────────────*/
 
 #pic-panel-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: 14px 16px 12px;
+  padding: 12px 14px 10px;
   background: #032d60;
   color: #fff;
   flex-shrink: 0;
+  border-radius: 11px 11px 0 0;
+}
+
+#pic-panel-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+#pic-panel-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 #pic-panel-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
 
-#pic-panel-org {
-  font-size: 10px;
+#pic-panel-info-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
   opacity: 0.55;
-  margin-top: 2px;
-  letter-spacing: 0.01em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+#pic-panel-info-btn:hover {
+  opacity: 0.9;
+}
+
+#pic-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.pic-header-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 3px 5px;
+  opacity: 0.6;
+  line-height: 1;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.pic-header-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* ── Org badge with signal dot ─────────────────────────────────────────────*/
+
+#pic-panel-org-badge {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 13px;
+  padding: 4px 10px 4px 7px;
+  width: fit-content;
+  margin-bottom: 5px;
+}
+
+.pic-signal-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #3dd68c;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+#pic-panel-org {
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.85;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
 }
 
 #pic-panel-subtitle {
   font-size: 11px;
-  opacity: 0.75;
-  margin-top: 3px;
+  opacity: 0.65;
   word-break: break-all;
-}
-
-#pic-panel-close {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 16px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0 0 0 12px;
-  opacity: 0.8;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-
-#pic-panel-close:hover {
-  opacity: 1;
+  line-height: 1.3;
 }
 
 /* ── Panel body ────────────────────────────────────────────────────────────*/
@@ -98,39 +159,40 @@
 #pic-panel-body {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 14px;
 }
 
 /* ── Progress bar ──────────────────────────────────────────────────────────*/
 
 #pic-progress-bar-track {
-  height: 6px;
+  height: 4px;
   background: #e8e8e8;
-  border-radius: 3px;
+  border-radius: 2px;
   overflow: hidden;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 #pic-progress-bar {
   height: 100%;
   width: 0;
   background: #0176d3;
-  border-radius: 3px;
+  border-radius: 2px;
   transition: width 0.3s ease;
 }
 
 #pic-progress-label {
-  font-size: 12px;
+  font-size: 11px;
   color: #706e6b;
+  margin-bottom: 10px;
 }
 
 /* ── Results ───────────────────────────────────────────────────────────────*/
 
 #pic-results-summary {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   margin-bottom: 10px;
-  color: #181818;
+  color: #3e3e3c;
 }
 
 .pic-notice {
@@ -138,7 +200,7 @@
   color: #c23934;
   background: #fef0ee;
   border: 1px solid #f4c2be;
-  border-radius: 4px;
+  border-radius: 6px;
   padding: 6px 10px;
   margin-bottom: 10px;
 }
@@ -147,7 +209,7 @@
   font-size: 13px;
   color: #3e3e3c;
   background: #f3f3f3;
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 20px;
   text-align: center;
 }
@@ -155,9 +217,9 @@
 /* ── Result groups ─────────────────────────────────────────────────────────*/
 
 .pic-result-group {
-  margin-bottom: 8px;
-  border: 1px solid #dddbda;
-  border-radius: 6px;
+  margin-bottom: 6px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
   overflow: hidden;
 }
 
@@ -165,43 +227,56 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  background: #f3f3f3;
+  padding: 7px 10px;
+  background: #f8f8f8;
   cursor: pointer;
   user-select: none;
 }
 
 .pic-result-group-header:hover {
-  background: #e8e8e8;
+  background: #f0f0f0;
 }
 
 .pic-result-type-label {
-  font-size: 12px;
-  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
   color: #032d60;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
+}
+
+.pic-collapse-arrow {
+  font-size: 9px;
+  opacity: 0.6;
+  transition: transform 0.15s ease;
+  display: inline-block;
+  width: 10px;
+  text-align: center;
 }
 
 .pic-result-count-badge {
   background: #0176d3;
   color: #fff;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   border-radius: 10px;
-  padding: 1px 7px;
+  padding: 2px 7px;
   min-width: 18px;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .pic-result-group-body {
-  padding: 6px 0;
+  padding: 4px 0;
 }
 
 /* ── Individual result items ───────────────────────────────────────────────*/
 
 .pic-result-item {
-  padding: 6px 12px;
+  padding: 5px 10px;
   border-bottom: 1px solid #f3f3f3;
 }
 
@@ -252,7 +327,7 @@
   z-index: 99999;
   background: #fff;
   border: 1px solid #dddbda;
-  border-radius: 8px;
+  border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
   display: flex;
   flex-direction: column;
@@ -267,6 +342,7 @@
   background: #032d60;
   color: #fff;
   flex-shrink: 0;
+  border-radius: 9px 9px 0 0;
 }
 
 #pic-picker-title {

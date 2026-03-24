@@ -91,12 +91,22 @@ function ensurePanel() {
   panel.id = 'pic-panel';
   panel.innerHTML = `
     <div id="pic-panel-header">
-      <div>
-        <div id="pic-panel-title">Picklist Impact Checker</div>
-        <div id="pic-panel-org"></div>
-        <div id="pic-panel-subtitle"></div>
+      <div id="pic-panel-header-row">
+        <div id="pic-panel-title-wrap">
+          <span id="pic-panel-title">Picklist Impact Checker</span>
+          <button id="pic-panel-info-btn" title="About" tabindex="-1">ⓘ</button>
+        </div>
+        <div id="pic-panel-actions">
+          <button class="pic-header-btn" id="pic-panel-minimize" title="Minimize">—</button>
+          <button class="pic-header-btn" id="pic-panel-settings" title="Settings">⚙</button>
+          <button class="pic-header-btn" id="pic-panel-close" title="Close">✕</button>
+        </div>
       </div>
-      <button id="pic-panel-close" title="Close">✕</button>
+      <div id="pic-panel-org-badge">
+        <span class="pic-signal-dot"></span>
+        <span id="pic-panel-org">—</span>
+      </div>
+      <div id="pic-panel-subtitle"></div>
     </div>
     <div id="pic-panel-body">
       <div id="pic-progress-wrap">
@@ -159,9 +169,13 @@ function renderResults(allResults, objName, value) {
     if (items.length === 0) continue;
     const group = document.createElement('div'); group.className = 'pic-result-group';
     const header = document.createElement('div'); header.className = 'pic-result-group-header';
-    header.innerHTML = `<span class="pic-result-type-label">${escapeHtml(typeName)}</span><span class="pic-result-count-badge">${items.length}</span>`;
+    header.innerHTML = `<span class="pic-result-type-label"><span class="pic-collapse-arrow">▼</span>${escapeHtml(typeName)}</span><span class="pic-result-count-badge">${items.length}</span>`;
     const body = document.createElement('div'); body.className = 'pic-result-group-body';
-    header.addEventListener('click', () => { body.style.display = body.style.display === 'none' ? '' : 'none'; });
+    header.addEventListener('click', () => {
+      const collapsed = body.style.display === 'none';
+      body.style.display = collapsed ? '' : 'none';
+      header.querySelector('.pic-collapse-arrow').textContent = collapsed ? '▼' : '▶';
+    });
     for (const item of items) {
       const div = document.createElement('div'); div.className = 'pic-result-item';
       const url = (item.linkType && item.linkType !== 'plain') ? buildSetupUrl(item.linkType, item.id, objName) : null;
@@ -197,9 +211,13 @@ function renderResultGroup(el, label, items, objName) {
   const hits = items.filter(r => r.linkType !== null).length;
   el.className = 'pic-result-group';
   const header = document.createElement('div'); header.className = 'pic-result-group-header';
-  header.innerHTML = `<span class="pic-result-type-label">${escapeHtml(label)}</span><span class="pic-result-count-badge">${hits}</span>`;
+  header.innerHTML = `<span class="pic-result-type-label"><span class="pic-collapse-arrow">▼</span>${escapeHtml(label)}</span><span class="pic-result-count-badge">${hits}</span>`;
   const body = document.createElement('div'); body.className = 'pic-result-group-body';
-  header.addEventListener('click', () => { body.style.display = body.style.display === 'none' ? '' : 'none'; });
+  header.addEventListener('click', () => {
+    const collapsed = body.style.display === 'none';
+    body.style.display = collapsed ? '' : 'none';
+    header.querySelector('.pic-collapse-arrow').textContent = collapsed ? '▼' : '▶';
+  });
   for (const item of items) {
     const div = document.createElement('div'); div.className = 'pic-result-item';
     const url = (item.linkType && item.linkType !== 'plain') ? buildSetupUrl(item.linkType, item.id, objName) : null;
