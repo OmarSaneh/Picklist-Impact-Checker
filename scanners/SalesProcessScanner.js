@@ -41,7 +41,9 @@ export class SalesProcessScanner extends MetadataScanner {
         const matched = [...readXml.matchAll(/<values>([\s\S]*?)<\/values>/g)]
           .some(([, xml]) => xml.includes(`<fullName>${xmlValue}</fullName>`));
         if (matched) {
-          results.push({ id: '', name: fullName.slice(prefix.length), snippets: [], linkType: 'plain' });
+          const processName = fullName.slice(prefix.length);
+          const linkType = objName === 'Lead' ? 'LeadProcess' : 'SalesProcess';
+          results.push({ id: '', name: processName, snippets: [], linkType });
         }
       } catch { /* skip */ }
     }

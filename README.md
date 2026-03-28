@@ -6,36 +6,39 @@ A Salesforce Chrome extension that scans your org's metadata for hardcoded pickl
 
 ## What it does
 
-When you're on a picklist field in Salesforce Setup (Object Manager → Fields & Relationships), the extension injects a **Scan** button next to each value. Click it and a side panel shows every place that value is hardcoded across 22 metadata types.
+When you're on a picklist field in Salesforce Setup (Object Manager → Fields & Relationships), the extension injects a **Scan** button next to each value. Click it and a side panel shows every place that value is hardcoded across 25 metadata types.
 
 ---
 
-## Scanners (22 total)
+## Scanners (25 total)
 
 | # | Metadata Type | Scope | Notes |
 |---|---|---|---|
 | 1 | **Validation Rules** | All objects | Checks formula body for the quoted value |
 | 2 | **Formula Fields** | All objects | Checks formula expression |
-| 3 | **Flows** | All objects | Checks all flow element values and conditions |
+| 3 | **Flows** | All objects | Checks all flow element values and conditions (all statuses) |
 | 4 | **Apex Classes** | Org-wide | Full-text search of class body |
-| 5 | **Apex Triggers** | All objects | Full-text search of trigger body |
+| 5 | **Apex Triggers** | All objects | Full-text search of trigger body (active & inactive) |
 | 6 | **Workflow Rules** | All objects | Checks rule criteria and field update values |
-| 7 | **Aura Components** | Org-wide | Checks component, controller, and helper files |
-| 8 | **Visualforce Pages** | Org-wide | Checks page markup for EL expressions |
+| 7 | **Aura Components** | Org-wide | Checks component, controller, helper, event, and renderer files |
+| 8 | **Visualforce Pages** | Org-wide | Checks page and component markup |
 | 9 | **Approval Processes** | All objects | Checks entry criteria and step conditions via SOAP Metadata API |
 | 10 | **List Views** | All objects | Checks SOQL filter query for the value |
 | 11 | **Email Templates** | Org-wide | Checks HTML and plain-text body |
-| 12 | **Path Assistants** ⏳ | All objects | Checks step picklist value entries — pending validation |
+| 12 | **Path Assistants** | All objects | Checks step picklist value entries |
 | 13 | **Reports** | Org-wide | Checks report filter values (supports multi-value filters) |
 | 14 | **Record Types** | All objects | Checks which picklist values are enabled per record type |
 | 15 | **Support Processes** | Case only | Checks which Status values are active in each support process |
 | 16 | **Escalation Rules** | Case only | Checks rule entry criteria for the value |
 | 17 | **Entitlement Processes** | Case & WorkOrder | Checks milestone criteria conditions |
-| 18 | **LWC** | Org-wide | Full-text search of component JS files |
+| 18 | **LWC** | Org-wide | Full-text search of component JS, HTML, and CSS files |
 | 19 | **Assignment Rules** | Case & Lead | Checks rule criteria values |
 | 20 | **Sharing Rules** | All objects | Checks criteria-based sharing rule conditions |
-| 21 | **Quick Actions** | All objects | Checks field overrides with literal picklist values on object-scoped actions |
-| 22 | **Sales & Lead Processes** ⏳ | Opportunity & Lead | Checks which Stage/Status values are active in each process — pending validation |
+| 21 | **Quick Actions** | All objects | Checks field overrides with literal picklist values |
+| 22 | **Sales & Lead Processes** | Opportunity & Lead | Checks which Stage/Status values are active in each process |
+| 23 | **Custom Metadata Types** | Org-wide | Checks all custom metadata records for matching text/picklist fields |
+| 24 | **Lightning Pages** | Org-wide | Checks App Builder page component properties |
+| 25 | **OmniStudio** | Org-wide | Checks OmniProcess definitions (requires OmniStudio license) |
 
 ---
 

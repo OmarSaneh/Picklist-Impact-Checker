@@ -116,7 +116,7 @@ function ensurePanel() {
     </div>
     <div id="pic-about-popover" style="display:none">
       <div id="pic-about-title">Picklist Impact Checker <span id="pic-about-version">v1.0.0</span></div>
-      <div id="pic-about-desc">Scans 22 Salesforce metadata types for hardcoded picklist values.</div>
+      <div id="pic-about-desc">Scans 25 Salesforce metadata types for hardcoded picklist values.</div>
       <div id="pic-about-links">
         <a href="https://github.com/OmarSaneh/Picklist-Impact-Checker/issues/new?labels=bug&template=bug_report.md" target="_blank" class="pic-about-link">🐛 Report a bug</a>
         <a href="https://github.com/OmarSaneh/Picklist-Impact-Checker/issues/new?labels=enhancement&template=feature_request.md" target="_blank" class="pic-about-link">💡 Request a feature</a>
@@ -524,7 +524,7 @@ async function injectIntoClassicTable(ctx) {
     const headers = headerCells.map(c => c.textContent.trim().toLowerCase().replace(/\s+/g, ' '));
 
     // Only target the picklist values table — must have both "values" and "api name" columns
-    const valuesIdx  = headers.findIndex(h => /^values?$/.test(h));
+    const valuesIdx  = headers.findIndex(h => /^values?$/.test(h) || h === 'stage name');
     const apiNameIdx = headers.findIndex(h => /api[\s\-]?name/.test(h));
     if (valuesIdx === -1 || apiNameIdx === -1) continue;
 

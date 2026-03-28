@@ -1,7 +1,7 @@
 # Picklist Impact Checker — AI Context
 
 Chrome extension that scans a Salesforce org for hardcoded references to a picklist value across
-13 metadata types. Users navigate to a picklist field in Setup, click "Scan" next to a value,
+25 metadata types. Users navigate to a picklist field in Setup, click "Scan" next to a value,
 and the extension queries the org's APIs in parallel and presents all references in a slide-in panel.
 
 ## Build
@@ -22,7 +22,7 @@ api.js                 # sfFetch, toolingQuery/All, restQuery/All
 utils.js               # escapeHtml, getMatchingSnippets, buildSetupUrl
 scanners/
   MetadataScanner.js   # Base class (label + scan())
-  *.js                 # 13 concrete scanners
+  *.js                 # 25 concrete scanners
 ```
 
 ## Adding a New Scanner

@@ -46,7 +46,7 @@ export class EscalationRuleScanner extends MetadataScanner {
         for (const [, ruleXml] of ruleBlocks) {
           if (!ruleXml.includes(`<value>${xmlValue}</value>`)) continue;
           const ruleName = ruleXml.match(/<fullName>([^<]+)<\/fullName>/)?.[1] || containerName;
-          results.push({ id: '', name: ruleName, snippets: [], linkType: 'plain' });
+          results.push({ id: '', name: ruleName, snippets: [], linkType: 'EscalationRule' });
         }
       } catch { /* skip */ }
     }

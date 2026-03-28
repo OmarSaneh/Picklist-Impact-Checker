@@ -6,13 +6,18 @@ export class WorkflowRuleScanner extends MetadataScanner {
   get label() { return 'Workflow Rules'; }
 
   async scan(objName, value) {
-    let entityDef;
-    try { entityDef = await toolingQuery(`SELECT Id FROM EntityDefinition WHERE QualifiedApiName = '${objName}'`); } catch { return []; }
-    if (!entityDef.length) return [];
-    const entityId = entityDef[0].Id;
+    // Standard objects: TableEnumOrId stores the API name (e.g. 'Case')
+    // Custom objects: TableEnumOrId stores the entity ID — resolve via EntityDefinition
+    let tableId = objName;
+    if (objName.endsWith('__c')) {
+      try {
+        const entityDef = await toolingQuery(`SELECT Id FROM EntityDefinition WHERE QualifiedApiName = '${objName}'`);
+        if (entityDef.length) tableId = entityDef[0].Id;
+      } catch { /* fall back to name */ }
+    }
 
     let list;
-    try { list = await toolingQuery(`SELECT Id, Name FROM WorkflowRule WHERE TableEnumOrId = '${entityId}'`); } catch { return []; }
+    try { list = await toolingQuery(`SELECT Id, Name FROM WorkflowRule WHERE TableEnumOrId = '${tableId}'`); } catch { return []; }
 
     const q = '"' + value + '"';
     const BATCH = 10;

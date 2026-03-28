@@ -34,13 +34,11 @@ export function buildSetupUrl(type, id, objName) {
     case 'ApprovalProcess': return id ? `${setupBase}/lightning/setup/ApprovalProcesses/page?address=%2F${id}` : `${setupBase}/lightning/setup/ApprovalProcesses/home`;
     case 'ListView':       return `/lightning/o/${objName}/list?filterName=${id}`;
     case 'EmailTemplate':  return `${setupBase}/lightning/setup/CommunicationTemplatesEmail/home`;
-    case 'PathAssistant':  return `${setupBase}/lightning/setup/PathAssistant/home`;
+    case 'PathAssistant':  return `${setupBase}/lightning/setup/PathAssistantSetupHome/home`;
     case 'Report':              return `${apiBase}/lightning/r/Report/${id}/view`;
     case 'RecordType':          return `${setupBase}/lightning/setup/ObjectManager/${objName}/RecordTypes/${id}/view`;
-    case 'SupportProcess':      return `${setupBase}/lightning/setup/SupportProcesses/home`;
-    case 'EscalationRule':      return id
-      ? `${setupBase}/lightning/setup/null/page?address=${encodeURIComponent(`/setup/own/entityruledetail.jsp?id=${id}&rtype=3&entity=Case`)}`
-      : `${setupBase}/lightning/setup/CaseEscalationRules/home`;
+    case 'SupportProcess':      return `${setupBase}/lightning/setup/CaseProcess/home`;
+    case 'EscalationRule':      return `${setupBase}/lightning/setup/CaseEscRules/home`;
     case 'EntitlementProcess':  return `${setupBase}/lightning/setup/EntitlementProcesses/home`;
     case 'SharingRule': {
       if (!id) return `${setupBase}/lightning/setup/SecuritySharing/home`;
@@ -52,6 +50,8 @@ export function buildSetupUrl(type, id, objName) {
     }
     case 'QuickAction':         return `${setupBase}/lightning/setup/ObjectManager/${objName}/ButtonsLinksActions/${id}/view`;
     case 'LWC':                 return `${setupBase}/lightning/setup/LightningComponentBundles/home`;
+    case 'SalesProcess':        return `${setupBase}/lightning/setup/OpportunityProcess/home`;
+    case 'LeadProcess':         return `${setupBase}/lightning/setup/LeadProcess/home`;
     case 'CustomMetadata':      return id
       ? `${setupBase}/lightning/setup/CustomMetadataTypes/page?address=%2F${id}%2Fview`
       : `${setupBase}/lightning/setup/CustomMetadataTypes/home`;
