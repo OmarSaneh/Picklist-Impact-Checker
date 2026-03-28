@@ -25,7 +25,7 @@ export class FlowScanner extends MetadataScanner {
   async scan(_objName, value) {
     let flowList;
     // Scan ALL flows (Active, Inactive, Draft) — inactive flows are a common source of hidden references
-    try { flowList = await toolingQueryAll(`SELECT Id, MasterLabel, Status FROM Flow`); }
+    try { flowList = await toolingQueryAll(`SELECT Id, MasterLabel, Status, VersionNumber FROM Flow`); }
     catch { return []; }
 
     const jq = '"' + value + '"';
@@ -39,7 +39,8 @@ export class FlowScanner extends MetadataScanner {
           if (!detail.length) return null;
           const snippets = this.#extractSnippets(detail[0].Metadata || {}, jq);
           if (snippets.length === 0) return null;
-          const name = flow.Status === 'Active' ? flow.MasterLabel : `${flow.MasterLabel} (${flow.Status})`;
+          const suffix = flow.Status === 'Active' ? '' : ` (${flow.Status} - v${flow.VersionNumber})`;
+          const name = flow.MasterLabel + suffix;
           return { id: flow.Id, name, snippets, linkType: 'Flow' };
         } catch { return null; }
       }));
