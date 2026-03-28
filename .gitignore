@@ -143,3 +143,9 @@ vite.config.ts.timestamp-*
 
 # Extension build output
 content.bundle.js
+
+# Dev tooling — not part of the extension
+.sfdx/
+playwright-mcp.config.json
+test-scanners.mjs
+.mcp.json

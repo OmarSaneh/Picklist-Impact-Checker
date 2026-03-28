@@ -14,7 +14,7 @@ export class EmailTemplateScanner extends MetadataScanner {
       const htmlSnippets = getMatchingSnippets(r.HtmlValue || '', q);
       const bodySnippets = getMatchingSnippets(r.Body || '', q);
       const snippets = [...htmlSnippets, ...bodySnippets].slice(0, 3);
-      if (snippets.length > 0) results.push({ id: r.Id, name: r.Name, snippets: [], linkType: 'EmailTemplate' });
+      if (snippets.length > 0) results.push({ id: r.Id, name: r.Name, snippets, linkType: 'EmailTemplate' });
     }
     return results;
   }

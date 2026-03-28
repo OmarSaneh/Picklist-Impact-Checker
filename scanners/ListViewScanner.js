@@ -18,29 +18,34 @@ export class ListViewScanner extends MetadataScanner {
     } catch { return []; }
 
     const q = "'" + value + "'";
+    const BATCH = 10;
     const results = [];
 
-    for (const view of views) {
-      try {
-        const describe = await sfFetch(`/services/data/v59.0/sobjects/${objName}/listviews/${view.id}/describe`);
+    for (let i = 0; i < views.length; i += BATCH) {
+      const batch = await Promise.all(views.slice(i, i + BATCH).map(async view => {
+        try {
+          const describe = await sfFetch(`/services/data/v59.0/sobjects/${objName}/listviews/${view.id}/describe`);
 
-        // Primary: search the SOQL query string — always contains the picklist value in single quotes
-        const query = describe.query || '';
-        const snippets = getMatchingSnippets(query, q);
+          // Primary: search the SOQL query string — always contains the picklist value in single quotes
+          const query = describe.query || '';
+          const snippets = getMatchingSnippets(query, q);
 
-        // Fallback: structured filters array (not always populated)
-        if (snippets.length === 0) {
-          const filters = describe.filters || [];
-          for (const f of filters) {
-            if (f.value === value) snippets.push(`${f.fieldApiName || f.field} ${f.operation} ${f.value}`);
-            if (snippets.length >= 3) break;
+          // Fallback: structured filters array (not always populated)
+          if (snippets.length === 0) {
+            const filters = describe.filters || [];
+            for (const f of filters) {
+              if (f.value === value) snippets.push(`${f.fieldApiName || f.field} ${f.operation} ${f.value}`);
+              if (snippets.length >= 3) break;
+            }
           }
-        }
 
-        if (snippets.length > 0) {
-          results.push({ id: view.id, name: view.label, snippets: [], linkType: 'ListView' });
-        }
-      } catch { /* skip */ }
+          if (snippets.length > 0) {
+            return { id: view.id, name: view.label, snippets: [], linkType: 'ListView' };
+          }
+          return null;
+        } catch { return null; }
+      }));
+      results.push(...batch.filter(Boolean));
     }
 
     return results;

@@ -52,6 +52,15 @@ export function buildSetupUrl(type, id, objName) {
     }
     case 'QuickAction':         return `${setupBase}/lightning/setup/ObjectManager/${objName}/ButtonsLinksActions/${id}/view`;
     case 'LWC':                 return `${setupBase}/lightning/setup/LightningComponentBundles/home`;
+    case 'CustomMetadata':      return id
+      ? `${setupBase}/lightning/setup/CustomMetadataTypes/page?address=%2F${id}%2Fview`
+      : `${setupBase}/lightning/setup/CustomMetadataTypes/home`;
+    case 'FlexiPage':           return id
+      ? `${setupBase}/visualEditor/appBuilder.app?pageId=${id}`
+      : `${setupBase}/lightning/setup/FlexiPageList/home`;
+    case 'Omnistudio':          return id
+      ? `${apiBase}/lightning/r/OmniProcess/${id}/view`
+      : `${apiBase}/lightning/r/OmniProcess/list`;
     default:                    return setupBase;
   }
 }

@@ -16,7 +16,7 @@ export async function getSession() {
 
 const SF_TIMEOUT_MS = 30_000;
 
-export async function sfFetch(path, opts = {}) {
+export async function sfFetch(path, opts = {}, _retry = 0) {
   const { instanceUrl, sid } = await getSession();
   const url = path.startsWith('http') ? path : `${instanceUrl}${path}`;
 
@@ -35,6 +35,12 @@ export async function sfFetch(path, opts = {}) {
     throw new Error('Network error — check your connection and try again.');
   } finally {
     clearTimeout(timer);
+  }
+
+  // Retry on rate limit or transient server errors (not on auth failures or timeouts)
+  if ((res.status === 429 || (res.status >= 500 && res.status < 600)) && _retry < 2) {
+    await new Promise(r => setTimeout(r, _retry === 0 ? 2_000 : 4_000));
+    return sfFetch(path, opts, _retry + 1);
   }
 
   if (!res.ok) {

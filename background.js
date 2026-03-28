@@ -24,16 +24,21 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
   if (msg.type === 'SOAP_METADATA') {
     (async () => {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 30_000);
       try {
         const res = await fetch(`${msg.instanceUrl}/services/Soap/m/59.0`, {
           method: 'POST',
           headers: { 'Content-Type': 'text/xml; charset=UTF-8', 'SOAPAction': '""' },
           body: msg.body,
+          signal: controller.signal,
         });
+        clearTimeout(timer);
         const xml = await res.text();
         sendResponse({ xml });
       } catch (err) {
-        sendResponse({ error: err.message });
+        clearTimeout(timer);
+        sendResponse({ error: err.name === 'AbortError' ? 'SOAP request timed out (30 s)' : err.message });
       }
     })();
     return true;

@@ -24,17 +24,26 @@ export class FlowScanner extends MetadataScanner {
 
   async scan(_objName, value) {
     let flowList;
-    try { flowList = await toolingQueryAll(`SELECT Id, MasterLabel FROM Flow WHERE Status = 'Active'`); }
+    // Scan ALL flows (Active, Inactive, Draft) — inactive flows are a common source of hidden references
+    try { flowList = await toolingQueryAll(`SELECT Id, MasterLabel, Status FROM Flow`); }
     catch { return []; }
-    const results = [];
+
     const jq = '"' + value + '"';
-    for (const flow of flowList) {
-      try {
-        const detail = await toolingQuery(`SELECT Id, MasterLabel, Metadata FROM Flow WHERE Id = '${flow.Id}'`);
-        if (!detail.length) continue;
-        const snippets = this.#extractSnippets(detail[0].Metadata || {}, jq);
-        if (snippets.length > 0) results.push({ id: flow.Id, name: flow.MasterLabel, snippets, linkType: 'Flow' });
-      } catch { /* skip */ }
+    const BATCH = 10;
+    const results = [];
+
+    for (let i = 0; i < flowList.length; i += BATCH) {
+      const batch = await Promise.all(flowList.slice(i, i + BATCH).map(async flow => {
+        try {
+          const detail = await toolingQuery(`SELECT Id, MasterLabel, Status, Metadata FROM Flow WHERE Id = '${flow.Id}'`);
+          if (!detail.length) return null;
+          const snippets = this.#extractSnippets(detail[0].Metadata || {}, jq);
+          if (snippets.length === 0) return null;
+          const name = flow.Status === 'Active' ? flow.MasterLabel : `${flow.MasterLabel} (${flow.Status})`;
+          return { id: flow.Id, name, snippets, linkType: 'Flow' };
+        } catch { return null; }
+      }));
+      results.push(...batch.filter(Boolean));
     }
     return results;
   }

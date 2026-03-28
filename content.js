@@ -29,6 +29,9 @@ import { AssignmentRuleScanner }     from './scanners/AssignmentRuleScanner.js';
 import { SharingRuleScanner }        from './scanners/SharingRuleScanner.js';
 import { QuickActionScanner }        from './scanners/QuickActionScanner.js';
 import { SalesProcessScanner }       from './scanners/SalesProcessScanner.js';
+import { CustomMetadataScanner }     from './scanners/CustomMetadataScanner.js';
+import { FlexiPageScanner }          from './scanners/FlexiPageScanner.js';
+import { OmnistudioScanner }         from './scanners/OmnistudioScanner.js';
 
 const _isInFrame     = window !== window.top;
 const _isSetupDomain = location.hostname.endsWith('salesforce-setup.com');
@@ -56,6 +59,9 @@ const SCANNERS = [
   new SharingRuleScanner(),
   new QuickActionScanner(),
   new SalesProcessScanner(),
+  new CustomMetadataScanner(),
+  new FlexiPageScanner(),
+  new OmnistudioScanner(),
 ];
 
 // ── URL parsing (main frame only) ──────────────────────────────────────────
@@ -393,6 +399,7 @@ async function runScanForValue(objName, value) {
       try {
         items = await scanner.scan(objName, value);
       } catch (err) {
+        console.error(`[Picklist Impact Checker] ${scanner.label} scan error:`, err);
         items = [{ id: '', name: `⚠ Error: ${err.message}`, snippets: [], linkType: null }];
       }
 

@@ -14,15 +14,21 @@ export class WorkflowRuleScanner extends MetadataScanner {
     let list;
     try { list = await toolingQuery(`SELECT Id, Name FROM WorkflowRule WHERE TableEnumOrId = '${entityId}'`); } catch { return []; }
 
-    const results = [];
     const q = '"' + value + '"';
-    for (const wr of list) {
-      try {
-        const detail = await toolingQuery(`SELECT Id, Name, Metadata FROM WorkflowRule WHERE Id = '${wr.Id}'`);
-        if (!detail.length) continue;
-        const json = JSON.stringify(detail[0].Metadata || '');
-        if (json.includes(q)) results.push({ id: wr.Id, name: wr.Name, snippets: getMatchingSnippets(json, q), linkType: 'WorkflowRule' });
-      } catch { /* skip */ }
+    const BATCH = 10;
+    const results = [];
+
+    for (let i = 0; i < list.length; i += BATCH) {
+      const batch = await Promise.all(list.slice(i, i + BATCH).map(async wr => {
+        try {
+          const detail = await toolingQuery(`SELECT Id, Name, Metadata FROM WorkflowRule WHERE Id = '${wr.Id}'`);
+          if (!detail.length) return null;
+          const json = JSON.stringify(detail[0].Metadata || '');
+          if (!json.includes(q)) return null;
+          return { id: wr.Id, name: wr.Name, snippets: getMatchingSnippets(json, q), linkType: 'WorkflowRule' };
+        } catch { return null; }
+      }));
+      results.push(...batch.filter(Boolean));
     }
     return results;
   }
