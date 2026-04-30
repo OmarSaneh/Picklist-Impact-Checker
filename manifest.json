@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Picklist Impact Checker",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Scan Salesforce metadata for hardcoded picklist values that would break when renamed.",
-  "permissions": ["cookies", "tabs", "storage"],
+  "permissions": ["cookies", "storage"],
   "host_permissions": [
     "https://*.salesforce.com/*",
     "https://*.force.com/*",
